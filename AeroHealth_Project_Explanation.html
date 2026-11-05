@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AeroHealth Project Explanation</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 18mm; }
+:root { --ink:#17212b; --muted:#536273; --teal:#087f83; --pale:#e8f5f3; --line:#d7e2e5; --dark:#15333b; }
+* { box-sizing:border-box; }
+body { margin:0; color:var(--ink); font-family: "Segoe UI", Arial, sans-serif; line-height:1.5; font-size:10.5pt; }
+.cover { min-height:245mm; display:flex; flex-direction:column; justify-content:space-between; padding:18mm 4mm 10mm; page-break-after:always; }
+.kicker { color:var(--teal); text-transform:uppercase; letter-spacing:.18em; font-size:9pt; font-weight:700; }
+h1 { font-size:39pt; line-height:1.03; margin:18mm 0 7mm; color:var(--dark); letter-spacing:-.03em; }
+.subtitle { font-size:16pt; color:var(--muted); max-width:145mm; }
+.cover-band { background:var(--dark); color:white; padding:10mm; border-radius:5mm; margin-top:22mm; }
+.cover-band strong { color:#7ce0d4; }
+.meta { color:var(--muted); font-size:9pt; }
+h2 { color:var(--dark); font-size:21pt; margin:13mm 0 4mm; border-bottom:2px solid var(--teal); padding-bottom:2mm; page-break-after:avoid; }
+h3 { color:var(--teal); font-size:14pt; margin:7mm 0 2mm; page-break-after:avoid; }
+h4 { margin:4mm 0 1mm; color:var(--dark); }
+p { margin:2.5mm 0; }
+ul, ol { margin-top:2mm; }
+li { margin:1.2mm 0; }
+code { font-family:Consolas, monospace; font-size:9pt; background:#f1f5f6; padding:1px 3px; border-radius:2px; }
+pre { background:#16252c; color:#edfafa; padding:4mm; border-radius:3mm; overflow:hidden; font:8.5pt/1.45 Consolas, monospace; white-space:pre-wrap; }
+.callout { border-left:4px solid var(--teal); background:var(--pale); padding:4mm 5mm; margin:4mm 0; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:4mm; }
+.card { border:1px solid var(--line); border-radius:3mm; padding:4mm; break-inside:avoid; }
+.card h4 { margin-top:0; }
+table { width:100%; border-collapse:collapse; margin:3mm 0 5mm; font-size:9.5pt; }
+th { background:var(--dark); color:white; text-align:left; }
+th, td { padding:2.5mm 3mm; border:1px solid var(--line); vertical-align:top; }
+tr:nth-child(even) td { background:#f7fafb; }
+.endpoint { color:var(--teal); font-family:Consolas, monospace; font-weight:700; }
+.flow { background:#f5faf9; border:1px solid var(--line); padding:5mm; font-family:Consolas, monospace; white-space:pre-wrap; font-size:9pt; }
+.page-break { page-break-before:always; }
+.small { font-size:9pt; color:var(--muted); }
+.footer { margin-top:12mm; padding-top:3mm; border-top:1px solid var(--line); color:var(--muted); font-size:8.5pt; }
+</style>
+</head>
+<body>
+<section class="cover">
+  <div>
+    <div class="kicker">Technical Project Report</div>
+    <h1>AeroHealth</h1>
+    <div class="subtitle">Personal air-quality intelligence, health-risk prediction, explainable AI, and cleaner route planning.</div>
+    <div class="cover-band"><strong>Purpose:</strong> connect environmental pollution data with personal health factors so a user can understand current risk, compare routes, and receive practical guidance.</div>
+  </div>
+  <div class="meta">Generated from the project architecture review<br>15 September 2026</div>
+</section>
+
+<h2>1. Executive Summary</h2>
+<p>AeroHealth is a two-part application consisting of a FastAPI backend and a React/TanStack frontend. The product presents air-quality readings, a personal risk score, predicted health impacts, SHAP explanations, AQI-aware routes, educational material, reports, and an AI assistant.</p>
+<p>The system is currently a functional prototype. Its model is trained on synthetic data, historical readings are generated rather than stored in a time-series database, route AQI is estimated synthetically, and the reports page uses mock data. These choices make the demo self-contained but are not substitutes for clinical validation or production environmental data.</p>
+<div class="flow">User
+  -> React dashboard
+  -> AQI / prediction / SHAP / route / history REST APIs
+  -> OpenAQ, XGBoost + SHAP, OpenStreetMap/OSMnx, Nominatim
+  -> visual panels, map, risk gauge, assistant, reports</div>
+
+<h2>2. Repository Structure</h2>
+<div class="grid">
+<div class="card"><h4>Backend</h4><p><code>aerohealth-api/main.py</code> is the FastAPI entry point.</p><p><code>aqi.py</code> retrieves and caches air-quality data.</p><p><code>model.py</code> trains XGBoost and produces predictions and SHAP explanations.</p><p><code>routing.py</code> loads road graphs and calculates direct/safe routes.</p><p><code>ai_assistant.py</code> contains optional backend Grok chat and report logic.</p></div>
+<div class="card"><h4>Frontend</h4><p><code>src/routes</code> contains dashboard, assistant, reports, and learning pages.</p><p><code>src/components/aero</code> contains the product-specific visual components.</p><p><code>src/lib/aero/api.ts</code> defines REST calls and local fallbacks.</p><p><code>src/lib/aero/types.ts</code> defines shared API shapes.</p><p><code>src/styles.css</code> defines the visual system and animations.</p></div>
+<div class="card"><h4>Generated and cached assets</h4><p><code>demo_graph.pickle</code> is the pre-downloaded road graph.</p><p><code>graph_cache</code> stores downloaded graphs by rounded location.</p><p><code>cache</code> directories contain cached data files.</p><p>Virtual environments contain installed Python packages and are not application source.</p></div>
+<div class="card"><h4>Utility launcher</h4><p>The outer <code>main.py</code> is a graph-generation utility. It downloads a road graph around Sahyadri College or Adyar, adds speed/travel-time data, saves <code>demo_graph.pickle</code>, and verifies that a route exists.</p></div>
+</div>
+
+<h2>3. Backend Architecture</h2>
+<h3>Startup lifecycle</h3>
+<ol><li>FastAPI creates the application and enables open CORS for the demo.</li><li>The startup hook trains the synthetic XGBoost model.</li><li>A SHAP TreeExplainer is initialized.</li><li>The pre-downloaded road graph is loaded when available.</li><li>A prediction and explanation are run once to reduce first-request latency.</li><li><code>/health</code> reports model, graph, and warm-up status.</li></ol>
+<h3>Dependencies</h3>
+<p>The backend dependencies are listed in <code>aerohealth-api/requirements.txt</code>: FastAPI, Uvicorn, httpx, XGBoost, SHAP, NumPy, NetworkX, OSMnx, scikit-learn, Pydantic, OpenAI, and python-dotenv.</p>
+
+<h2>4. REST API Contract</h2>
+<table><tr><th>Endpoint</th><th>Responsibility</th><th>Data source</th></tr>
+<tr><td class="endpoint">GET /health</td><td>Reports whether the application, model, and graph are ready.</td><td>Backend state</td></tr>
+<tr><td class="endpoint">GET /api/aqi</td><td>Returns current AQI and pollutant/weather fields for latitude and longitude.</td><td>OpenAQ, fallback location, or synthetic fallback</td></tr>
+<tr><td class="endpoint">POST /api/predict</td><td>Calculates personal risk score and predicted vital impacts.</td><td>XGBoost model</td></tr>
+<tr><td class="endpoint">POST /api/explain</td><td>Explains model output with base value and sorted SHAP contributions.</td><td>SHAP TreeExplainer</td></tr>
+<tr><td class="endpoint">POST /api/route</td><td>Returns direct and AQI-weighted safe routes as GeoJSON.</td><td>OSMnx graph plus estimated AQI</td></tr>
+<tr><td class="endpoint">GET /api/route/status</td><td>Reports progress when a new road network is downloading.</td><td>Backend download state</td></tr>
+<tr><td class="endpoint">POST /api/geocode</td><td>Converts a human address into latitude and longitude.</td><td>OpenStreetMap Nominatim</td></tr>
+<tr><td class="endpoint">GET /api/history</td><td>Returns a time series of AQI and risk values.</td><td>Mathematical synthetic history</td></tr>
+<tr><td class="endpoint">POST /api/chat</td><td>Streams context-aware backend AI responses.</td><td>xAI Grok, if XAI_API_KEY exists</td></tr>
+<tr><td class="endpoint">POST /api/quick-help</td><td>Returns predefined explanations for common terms.</td><td>Backend explanation map</td></tr>
+<tr><td class="endpoint">POST /api/health-report</td><td>Creates structured report insights and recommendations.</td><td>Rule-based report generator</td></tr></table>
+
+<h2>5. AQI Data Pipeline</h2>
+<p><code>aqi.py</code> rounds coordinates to three decimals and stores the response for five minutes. It searches OpenAQ v3 within a 25 km radius, selects the nearest station, fetches latest measurements, and maps parameters such as PM2.5, PM10, NO2, O3, and SO2 into the frontend contract.</p>
+<p>AQI is estimated from PM2.5 through simplified breakpoints ranging from 0 to 500. Temperature and humidity use defaults when the station does not provide them.</p>
+<div class="callout"><strong>Fallback chain:</strong> requested OpenAQ location -> verified Adyar/Mangaluru coordinates -> deterministic synthetic reading. The UI can therefore remain populated even without a working external API.</div>
+
+<h2>6. Risk Model and Explainability</h2>
+<h3>Features</h3>
+<p>The model uses PM2.5, NO2, O3, SO2, temperature, humidity, heart rate, age, weight, and asthma status.</p>
+<h3>Training</h3>
+<p>At startup, 5,000 synthetic rows are sampled across plausible pollution and biometric ranges. A hand-written formula combines pollutant normalization, heart rate, age, weight, asthma, and humidity effects. Gaussian noise is added, and the result is clipped to 0-100. XGBoost learns this synthetic relationship.</p>
+<h3>Outputs</h3>
+<table><tr><th>Output</th><th>Meaning</th></tr><tr><td>risk_score</td><td>Integer score from 0 to 100.</td></tr><tr><td>risk_label</td><td>Low, Moderate, High, or Severe using fixed thresholds.</td></tr><tr><td>heart_rate_delta</td><td>Estimated increase based on score.</td></tr><tr><td>hrv_delta</td><td>Estimated HRV decrease based on score.</td></tr><tr><td>resp_stress_delta</td><td>Estimated respiratory stress increase.</td></tr></table>
+<h3>SHAP</h3>
+<p>SHAP calculates how each feature moves the prediction away from the model's base value. Positive values raise risk and negative values lower risk. The frontend sorts and animates the largest contributions first, making the prediction more interpretable.</p>
+<div class="callout"><strong>Important:</strong> this is an educational/demo risk indicator, not a medical diagnosis or clinically validated prediction system.</div>
+
+<h2>7. Route Planning</h2>
+<p><code>routing.py</code> works with NetworkX MultiDiGraphs created by OSMnx. Graphs are checked in memory, then on disk, then downloaded on demand around the route midpoint.</p>
+<p>The direct path minimizes road length. For the safe path, every edge receives an AQI estimate and an adjusted weight:</p>
+<pre>aqi_weighted = length * (1 + (aqi / 100) * LAMBDA)
+LAMBDA = 2.5</pre>
+<p>The algorithm also selects a midpoint waypoint nudged perpendicular to the direct path, choosing the side with lower estimated pollution. It calculates two AQI-weighted legs through that waypoint. If the safe route collapses to the direct route, it tries removing the dirtiest direct edge. If graph loading or path calculation fails, a hard-coded smooth demo route is returned.</p>
+
+<h2>8. Frontend Pages and User Flows</h2>
+<h3>Dashboard: <code>/</code></h3>
+<p>The dashboard begins with a short boot sequence, then loads the current AQI and history. Pollutants are combined with user vitals and sent to the prediction and explanation endpoints. The main interface contains the risk gauge, telemetry, map, health-impact controls, and SHAP panel.</p>
+<p>React Query caches requests. AQI refreshes every two minutes. Vital changes are debounced by 320 ms so slider movement does not generate a request for every pixel of motion.</p>
+<h3>Location selection</h3>
+<p><code>TopNav.tsx</code> provides preset cities and a command-style search interface. Searches are geocoded through the backend. Regional aliases and Karnataka-specific scoring improve results for locations around Mangaluru and Udupi.</p>
+<h3>Map workflow</h3>
+<ol><li>User enters or accepts an origin and destination.</li><li>Addresses are geocoded if necessary.</li><li>The frontend requests a route.</li><li>If the road graph is downloading, the frontend polls status every two seconds.</li><li>When ready, the direct and safe GeoJSON lines are displayed on Leaflet.</li><li>Route metrics are converted into a route-specific risk estimate.</li></ol>
+<h3>AI assistant: <code>/assistant</code></h3>
+<p>The assistant stores multiple conversations in browser storage and supports streaming chat, speech recognition, text-to-speech, image generation, and contextual prompts. It currently uses the frontend Puter SDK with Grok rather than the backend <code>/api/chat</code> endpoint.</p>
+<h3>Reports: <code>/reports</code></h3>
+<p>The reports screen shows summary statistics, insights, recommendations, and exposure history. These values are currently hard-coded demo values. The export action simulates a delay and displays an alert; it does not yet produce a PDF.</p>
+<h3>Learn: <code>/learn</code></h3>
+<p>The learning screen is static educational content covering PM2.5, PM10, NO2, O3, SO2, CO, AQI bands, health effects, and protective actions.</p>
+
+<h2>9. Frontend Data Resilience</h2>
+<p>The API layer in <code>src/lib/aero/api.ts</code> wraps REST calls with <code>withFallback</code>. If the API URL is missing or a request fails, deterministic local implementations generate plausible values for AQI, prediction, SHAP, routes, and history.</p>
+<p>The result includes a <code>simulated</code> flag. The dashboard uses this flag to show that the displayed signal is local simulation rather than live backend data.</p>
+<p>This approach improves the judging/demo experience but can conceal backend connectivity problems unless the simulated indicator is noticed.</p>
+
+<h2>10. Visual and Interaction Design</h2>
+<ul><li>Dark, instrument-style interface with a teal primary accent.</li><li>Monospace typography for telemetry values and coordinates.</li><li>Animated risk gauge with risk-dependent colors.</li><li>Glass-like panels with subtle borders and ambient glow.</li><li>Animated grid, scanline, and background drift effects.</li><li>Staggered panel entrances and count-up numeric transitions.</li><li>Animated SHAP bars and route-line drawing.</li><li>Reduced-motion handling through Motion's reduced-motion support.</li></ul>
+<p>The shared components are in <code>src/components/aero</code>. General primitives include <code>Panel</code>, <code>PanelHead</code>, <code>CountUp</code>, <code>Shimmer</code>, and <code>CalmState</code>.</p>
+
+<h2>11. Configuration and Running</h2>
+<h3>Backend</h3>
+<pre>cd aerohealth-api
+python -m uvicorn main:app --reload --port 8000</pre>
+<p>The backend reads <code>XAI_API_KEY</code> from the environment for its optional Grok integration.</p>
+<h3>Frontend</h3>
+<pre>cd aerohealth-interface-frontend
+npm install
+npm run dev</pre>
+<p>The frontend reads the backend URL from <code>VITE_API_URL</code>, for example:</p>
+<pre>VITE_API_URL=http://localhost:8000</pre>
+<p>Other scripts are <code>npm run build</code>, <code>npm run preview</code>, <code>npm run lint</code>, and <code>npm run format</code>.</p>
+
+<h2>12. Current Limitations and Production Work</h2>
+<table><tr><th>Area</th><th>Current prototype behavior</th><th>Production requirement</th></tr>
+<tr><td>Risk model</td><td>Synthetic training data and hand-written target formula.</td><td>Validated, representative, ethically sourced health data and clinical review.</td></tr>
+<tr><td>Historical data</td><td>Generated mathematical time series.</td><td>Persistent time-series storage with timestamps and provenance.</td></tr>
+<tr><td>Route AQI</td><td>Synthetic spatial hotspots and clean corridors.</td><td>Measured or modeled pollution grids aligned to road segments.</td></tr>
+<tr><td>Reports</td><td>Mock values and simulated export.</td><td>Live report API, real PDF generation, download handling, and auditability.</td></tr>
+<tr><td>AI</td><td>Two separate integrations: Puter frontend and optional backend Grok.</td><td>One controlled integration, privacy policy, rate limits, and error handling.</td></tr>
+<tr><td>Security</td><td>Open CORS and no authentication.</td><td>Restricted origins, authentication, authorization, validation, and abuse controls.</td></tr>
+<tr><td>Privacy</td><td>Some assistant data is stored in browser storage.</td><td>Explicit consent, retention rules, encryption, and health-data governance.</td></tr>
+<tr><td>Build entry</td><td>The inspected workspace did not contain the referenced <code>src/main.tsx</code>.</td><td>Verify the frontend entry point before deployment.</td></tr></table>
+
+<h2>13. Final Assessment</h2>
+<p>AeroHealth is a thoughtfully integrated prototype rather than a collection of isolated screens. Its strongest aspect is the complete user journey: observe air quality, personalize with vitals, understand why the score changed, compare safer travel options, and ask an assistant for an explanation.</p>
+<p>The main technical boundary is between demonstration logic and production evidence. The UI and API contracts are well defined, but model outputs, historical trends, route pollution, and reports must be connected to validated sources before the system can be treated as a real health product.</p>
+<div class="footer">AeroHealth project explanation - generated report</div>
+</body>
+</html>

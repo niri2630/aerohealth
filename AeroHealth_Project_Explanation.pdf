@@ -1,0 +1,768 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 4984 >>
+stream
+q
+0.080 0.200 0.230 rg
+/F2 27 Tf
+48 790.0 Td
+(AeroHealth) Tj
+-48 -790.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 748.0 Td
+(1. Executive Summary) Tj
+-48 -748.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 724.0 Td
+(AeroHealth is a two-part application consisting of a FastAPI backend and a React/TanStack frontend.) Tj
+-48 -724.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 711.0 Td
+(The product presents air-quality readings, a personal risk score, predicted health impacts, SHAP) Tj
+-48 -711.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 698.0 Td
+(explanations, AQI-aware routes, educational material, reports, and an AI assistant.) Tj
+-48 -698.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 682.0 Td
+(The system is currently a functional prototype. Its model is trained on synthetic data, historical) Tj
+-48 -682.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 669.0 Td
+(readings are generated rather than stored in a time-series database, route AQI is estimated) Tj
+-48 -669.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 656.0 Td
+(synthetically, and the reports page uses mock data. These choices make the demo self-contained but) Tj
+-48 -656.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 643.0 Td
+(are not substitutes for clinical validation or production environmental data.) Tj
+-48 -643.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 619.0 Td
+(2. Repository Structure) Tj
+-48 -619.0 Td
+0.080 0.200 0.230 rg
+/F2 10 Tf
+48 595.0 Td
+(Backend) Tj
+-48 -595.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 580.0 Td
+(aerohealth-api/main.py is the FastAPI entry point.) Tj
+-48 -580.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 564.0 Td
+(aqi.py retrieves and caches air-quality data.) Tj
+-48 -564.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 548.0 Td
+(model.py trains XGBoost and produces predictions and SHAP explanations.) Tj
+-48 -548.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 532.0 Td
+(routing.py loads road graphs and calculates direct/safe routes.) Tj
+-48 -532.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 516.0 Td
+(ai_assistant.py contains optional backend Grok chat and report logic.) Tj
+-48 -516.0 Td
+0.080 0.200 0.230 rg
+/F2 10 Tf
+48 500.0 Td
+(Frontend) Tj
+-48 -500.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 485.0 Td
+(src/routes contains dashboard, assistant, reports, and learning pages.) Tj
+-48 -485.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 469.0 Td
+(src/components/aero contains the product-specific visual components.) Tj
+-48 -469.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 453.0 Td
+(src/lib/aero/api.ts defines REST calls and local fallbacks.) Tj
+-48 -453.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 437.0 Td
+(src/lib/aero/types.ts defines shared API shapes.) Tj
+-48 -437.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 421.0 Td
+(src/styles.css defines the visual system and animations.) Tj
+-48 -421.0 Td
+0.080 0.200 0.230 rg
+/F2 10 Tf
+48 405.0 Td
+(Generated and cached assets) Tj
+-48 -405.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 390.0 Td
+(demo_graph.pickle is the pre-downloaded road graph.) Tj
+-48 -390.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 374.0 Td
+(graph_cache stores downloaded graphs by rounded location.) Tj
+-48 -374.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 358.0 Td
+(cache directories contain cached data files.) Tj
+-48 -358.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 342.0 Td
+(Virtual environments contain installed Python packages and are not application source.) Tj
+-48 -342.0 Td
+0.080 0.200 0.230 rg
+/F2 10 Tf
+48 326.0 Td
+(Utility launcher) Tj
+-48 -326.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 311.0 Td
+(The outer main.py is a graph-generation utility. It downloads a road graph around Sahyadri College or) Tj
+-48 -311.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 298.0 Td
+(Adyar, adds speed/travel-time data, saves demo_graph.pickle, and verifies that a route exists.) Tj
+-48 -298.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 274.0 Td
+(3. Backend Architecture) Tj
+-48 -274.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 247.0 Td
+(Startup lifecycle) Tj
+-48 -247.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 229.0 Td
+(- FastAPI creates the application and enables open CORS for the demo.) Tj
+-48 -229.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 216.0 Td
+(- The startup hook trains the synthetic XGBoost model.) Tj
+-48 -216.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 203.0 Td
+(- A SHAP TreeExplainer is initialized.) Tj
+-48 -203.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 190.0 Td
+(- The pre-downloaded road graph is loaded when available.) Tj
+-48 -190.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 177.0 Td
+(- A prediction and explanation are run once to reduce first-request latency.) Tj
+-48 -177.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 164.0 Td
+(- /health reports model, graph, and warm-up status.) Tj
+-48 -164.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 148.0 Td
+(Dependencies) Tj
+-48 -148.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 130.0 Td
+(The backend dependencies are listed in aerohealth-api/requirements.txt: FastAPI, Uvicorn, httpx,) Tj
+-48 -130.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 117.0 Td
+(XGBoost, SHAP, NumPy, NetworkX, OSMnx, scikit-learn, Pydantic, OpenAI, and python-dotenv.) Tj
+-48 -117.0 Td
+Q
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 5329 >>
+stream
+q
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 782.0 Td
+(4. REST API Contract) Tj
+-48 -782.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 750.0 Td
+(5. AQI Data Pipeline) Tj
+-48 -750.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 726.0 Td
+(aqi.py rounds coordinates to three decimals and stores the response for five minutes. It searches) Tj
+-48 -726.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 713.0 Td
+(OpenAQ v3 within a 25 km radius, selects the nearest station, fetches latest measurements, and maps) Tj
+-48 -713.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 700.0 Td
+(parameters such as PM2.5, PM10, NO2, O3, and SO2 into the frontend contract.) Tj
+-48 -700.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 684.0 Td
+(AQI is estimated from PM2.5 through simplified breakpoints ranging from 0 to 500. Temperature and) Tj
+-48 -684.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 671.0 Td
+(humidity use defaults when the station does not provide them.) Tj
+-48 -671.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 647.0 Td
+(6. Risk Model and Explainability) Tj
+-48 -647.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 620.0 Td
+(Features) Tj
+-48 -620.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 602.0 Td
+(The model uses PM2.5, NO2, O3, SO2, temperature, humidity, heart rate, age, weight, and asthma) Tj
+-48 -602.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 589.0 Td
+(status.) Tj
+-48 -589.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 570.0 Td
+(Training) Tj
+-48 -570.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 552.0 Td
+(At startup, 5,000 synthetic rows are sampled across plausible pollution and biometric ranges. A) Tj
+-48 -552.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 539.0 Td
+(hand-written formula combines pollutant normalization, heart rate, age, weight, asthma, and humidity) Tj
+-48 -539.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 526.0 Td
+(effects. Gaussian noise is added, and the result is clipped to 0-100. XGBoost learns this synthetic) Tj
+-48 -526.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 513.0 Td
+(relationship.) Tj
+-48 -513.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 494.0 Td
+(Outputs) Tj
+-48 -494.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 473.0 Td
+(SHAP) Tj
+-48 -473.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 455.0 Td
+(SHAP calculates how each feature moves the prediction away from the model's base value. Positive) Tj
+-48 -455.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 442.0 Td
+(values raise risk and negative values lower risk. The frontend sorts and animates the largest) Tj
+-48 -442.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 429.0 Td
+(contributions first, making the prediction more interpretable.) Tj
+-48 -429.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 405.0 Td
+(7. Route Planning) Tj
+-48 -405.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 381.0 Td
+(routing.py works with NetworkX MultiDiGraphs created by OSMnx. Graphs are checked in memory, then on) Tj
+-48 -381.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 368.0 Td
+(disk, then downloaded on demand around the route midpoint.) Tj
+-48 -368.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 352.0 Td
+(The direct path minimizes road length. For the safe path, every edge receives an AQI estimate and an) Tj
+-48 -352.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 339.0 Td
+(adjusted weight:) Tj
+-48 -339.0 Td
+0.120 0.200 0.220 rg
+/F3 8.2 Tf
+48 323.0 Td
+(aqi_weighted = length * \(1 + \(aqi / 100\) * LAMBDA\) LAMBDA = 2.5) Tj
+-48 -323.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 309.0 Td
+(The algorithm also selects a midpoint waypoint nudged perpendicular to the direct path, choosing the) Tj
+-48 -309.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 296.0 Td
+(side with lower estimated pollution. It calculates two AQI-weighted legs through that waypoint. If) Tj
+-48 -296.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 283.0 Td
+(the safe route collapses to the direct route, it tries removing the dirtiest direct edge. If graph) Tj
+-48 -283.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 270.0 Td
+(loading or path calculation fails, a hard-coded smooth demo route is returned.) Tj
+-48 -270.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 246.0 Td
+(8. Frontend Pages and User Flows) Tj
+-48 -246.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 219.0 Td
+(Dashboard: /) Tj
+-48 -219.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 201.0 Td
+(The dashboard begins with a short boot sequence, then loads the current AQI and history. Pollutants) Tj
+-48 -201.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 188.0 Td
+(are combined with user vitals and sent to the prediction and explanation endpoints. The main) Tj
+-48 -188.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 175.0 Td
+(interface contains the risk gauge, telemetry, map, health-impact controls, and SHAP panel.) Tj
+-48 -175.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 159.0 Td
+(React Query caches requests. AQI refreshes every two minutes. Vital changes are debounced by 320 ms) Tj
+-48 -159.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 146.0 Td
+(so slider movement does not generate a request for every pixel of motion.) Tj
+-48 -146.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 127.0 Td
+(Location selection) Tj
+-48 -127.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 109.0 Td
+(TopNav.tsx provides preset cities and a command-style search interface. Searches are geocoded through) Tj
+-48 -109.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 96.0 Td
+(the backend. Regional aliases and Karnataka-specific scoring improve results for locations around) Tj
+-48 -96.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 83.0 Td
+(Mangaluru and Udupi.) Tj
+-48 -83.0 Td
+Q
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 5416 >>
+stream
+q
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 790.0 Td
+(Map workflow) Tj
+-48 -790.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 772.0 Td
+(- User enters or accepts an origin and destination.) Tj
+-48 -772.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 759.0 Td
+(- Addresses are geocoded if necessary.) Tj
+-48 -759.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 746.0 Td
+(- The frontend requests a route.) Tj
+-48 -746.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 733.0 Td
+(- If the road graph is downloading, the frontend polls status every two seconds.) Tj
+-48 -733.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 720.0 Td
+(- When ready, the direct and safe GeoJSON lines are displayed on Leaflet.) Tj
+-48 -720.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 707.0 Td
+(- Route metrics are converted into a route-specific risk estimate.) Tj
+-48 -707.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 691.0 Td
+(AI assistant: /assistant) Tj
+-48 -691.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 673.0 Td
+(The assistant stores multiple conversations in browser storage and supports streaming chat, speech) Tj
+-48 -673.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 660.0 Td
+(recognition, text-to-speech, image generation, and contextual prompts. It currently uses the frontend) Tj
+-48 -660.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 647.0 Td
+(Puter SDK with Grok rather than the backend /api/chat endpoint.) Tj
+-48 -647.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 628.0 Td
+(Reports: /reports) Tj
+-48 -628.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 610.0 Td
+(The reports screen shows summary statistics, insights, recommendations, and exposure history. These) Tj
+-48 -610.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 597.0 Td
+(values are currently hard-coded demo values. The export action simulates a delay and displays an) Tj
+-48 -597.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 584.0 Td
+(alert; it does not yet produce a PDF.) Tj
+-48 -584.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 565.0 Td
+(Learn: /learn) Tj
+-48 -565.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 547.0 Td
+(The learning screen is static educational content covering PM2.5, PM10, NO2, O3, SO2, CO, AQI bands,) Tj
+-48 -547.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 534.0 Td
+(health effects, and protective actions.) Tj
+-48 -534.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 510.0 Td
+(9. Frontend Data Resilience) Tj
+-48 -510.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 486.0 Td
+(The API layer in src/lib/aero/api.ts wraps REST calls with withFallback. If the API URL is missing or) Tj
+-48 -486.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 473.0 Td
+(a request fails, deterministic local implementations generate plausible values for AQI, prediction,) Tj
+-48 -473.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 460.0 Td
+(SHAP, routes, and history.) Tj
+-48 -460.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 444.0 Td
+(The result includes a simulated flag. The dashboard uses this flag to show that the displayed signal) Tj
+-48 -444.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 431.0 Td
+(is local simulation rather than live backend data.) Tj
+-48 -431.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 415.0 Td
+(This approach improves the judging/demo experience but can conceal backend connectivity problems) Tj
+-48 -415.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 402.0 Td
+(unless the simulated indicator is noticed.) Tj
+-48 -402.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 378.0 Td
+(10. Visual and Interaction Design) Tj
+-48 -378.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 354.0 Td
+(- Dark, instrument-style interface with a teal primary accent.) Tj
+-48 -354.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 341.0 Td
+(- Monospace typography for telemetry values and coordinates.) Tj
+-48 -341.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 328.0 Td
+(- Animated risk gauge with risk-dependent colors.) Tj
+-48 -328.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 315.0 Td
+(- Glass-like panels with subtle borders and ambient glow.) Tj
+-48 -315.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 302.0 Td
+(- Animated grid, scanline, and background drift effects.) Tj
+-48 -302.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 289.0 Td
+(- Staggered panel entrances and count-up numeric transitions.) Tj
+-48 -289.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 276.0 Td
+(- Animated SHAP bars and route-line drawing.) Tj
+-48 -276.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 263.0 Td
+(- Reduced-motion handling through Motion's reduced-motion support.) Tj
+-48 -263.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 250.0 Td
+(The shared components are in src/components/aero. General primitives include Panel, PanelHead,) Tj
+-48 -250.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 237.0 Td
+(CountUp, Shimmer, and CalmState.) Tj
+-48 -237.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 213.0 Td
+(11. Configuration and Running) Tj
+-48 -213.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 186.0 Td
+(Backend) Tj
+-48 -186.0 Td
+0.120 0.200 0.220 rg
+/F3 8.2 Tf
+48 168.0 Td
+(cd aerohealth-api python -m uvicorn main:app --reload --port 8000) Tj
+-48 -168.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 154.0 Td
+(The backend reads XAI_API_KEY from the environment for its optional Grok integration.) Tj
+-48 -154.0 Td
+0.040 0.420 0.430 rg
+/F2 12 Tf
+48 135.0 Td
+(Frontend) Tj
+-48 -135.0 Td
+0.120 0.200 0.220 rg
+/F3 8.2 Tf
+48 117.0 Td
+(cd aerohealth-interface-frontend npm install npm run dev) Tj
+-48 -117.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 103.0 Td
+(The frontend reads the backend URL from VITE_API_URL, for example:) Tj
+-48 -103.0 Td
+0.120 0.200 0.220 rg
+/F3 8.2 Tf
+48 87.0 Td
+(VITE_API_URL=http://localhost:8000) Tj
+-48 -87.0 Td
+Q
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 1370 >>
+stream
+q
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 790.0 Td
+(Other scripts are npm run build, npm run preview, npm run lint, and npm run format.) Tj
+-48 -790.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 766.0 Td
+(12. Current Limitations and Production Work) Tj
+-48 -766.0 Td
+0.080 0.350 0.360 rg
+/F2 17 Tf
+48 734.0 Td
+(13. Final Assessment) Tj
+-48 -734.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 710.0 Td
+(AeroHealth is a thoughtfully integrated prototype rather than a collection of isolated screens. Its) Tj
+-48 -710.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 697.0 Td
+(strongest aspect is the complete user journey: observe air quality, personalize with vitals,) Tj
+-48 -697.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 684.0 Td
+(understand why the score changed, compare safer travel options, and ask an assistant for an) Tj
+-48 -684.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 671.0 Td
+(explanation.) Tj
+-48 -671.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 655.0 Td
+(The main technical boundary is between demonstration logic and production evidence. The UI and API) Tj
+-48 -655.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 642.0 Td
+(contracts are well defined, but model outputs, historical trends, route pollution, and reports must) Tj
+-48 -642.0 Td
+0.100 0.130 0.160 rg
+/F1 9.5 Tf
+48 629.0 Td
+(be connected to validated sources before the system can be treated as a real health product.) Tj
+-48 -629.0 Td
+Q
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 12 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R 11 0 R] /Count 4 >>
+endobj
+13 0 obj
+<< /Type /Catalog /Pages 12 0 R >>
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000000160 00000 n 
+0000000228 00000 n 
+0000005264 00000 n 
+0000005411 00000 n 
+0000010792 00000 n 
+0000010939 00000 n 
+0000016407 00000 n 
+0000016554 00000 n 
+0000017977 00000 n 
+0000018126 00000 n 
+0000018203 00000 n 
+trailer
+<< /Size 14 /Root 13 0 R >>
+startxref
+18254
+%%EOF

@@ -1,0 +1,38 @@
+# Secrets and local environment configuration
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Python environments and generated files
+**/.venv/
+**/.venv*/
+**/venv/
+**/venv*/
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# JavaScript dependencies and build output
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.output/
+**/.tanstack/
+**/.nitro/
+**/.wrangler/
+**/.vite/
+
+# Runtime caches and logs
+**/cache/
+**/graph_cache/
+*.log
+
+# Local editor and operating-system files
+**/.DS_Store
+.vscode/
+.idea/
