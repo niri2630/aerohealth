@@ -511,7 +511,7 @@ Guidelines:
     
     if (context.vitals) {
       const v = context.vitals;
-      prompt += `\n- User vitals: Age ${v.age}, Heart rate ${v.heart_rate} bpm, Asthma: ${v.asthma ? 'Yes' : 'No'}`;
+      prompt += `\n- User vitals: Age ${v.age}, Heart rate ${v.heart_rate} bpm, Asthma: ${v.asthma ? 'Yes' : 'No'}, Hypertension: ${v.hypertension ? 'Yes' : 'No'}, SpO2: ${v.spo2 ?? 'n/a'}%, Height: ${v.height ?? 'n/a'} cm, Activity: ${v.activity ?? 'resting'}, Mask: ${v.mask ?? 'none'}`;
     }
     
     if (context.topRiskFactors && context.topRiskFactors.length > 0) {

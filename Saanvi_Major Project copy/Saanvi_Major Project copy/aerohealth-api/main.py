@@ -5,13 +5,17 @@ All endpoints match the reconciled frontend contract (see STEP0_RECONCILIATION.m
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional, List, Literal
 import time
 from datetime import datetime, timedelta
 import math
 
+import asyncio
+
 import aqi
+import forecast
+import gazetteer
 import model
 import routing
 import httpx  # For geocoding API
@@ -103,6 +107,12 @@ class PredictBody(BaseModel):
     age: float
     weight: float
     asthma: bool
+    # Extended personal profile - optional so older clients keep working.
+    hypertension: bool = False
+    spo2: float = Field(97.0, ge=90, le=100)          # blood oxygen saturation, %
+    height: float = Field(170.0, ge=120, le=220)      # cm
+    activity: Literal["resting", "walking", "cycling"] = "resting"
+    mask: Literal["none", "surgical", "n95"] = "none"
 
 
 class LatLon(BaseModel):
@@ -113,6 +123,11 @@ class LatLon(BaseModel):
 class RouteRequest(BaseModel):
     origin: LatLon
     destination: LatLon
+    # Personalisation: durations use the traveller's own speed (not car speed)
+    # and the "safe" route is the one with the lowest inhaled dose.
+    speed_kmh: Optional[float] = Field(None, gt=0, le=200)
+    activity: Literal["resting", "walking", "cycling"] = "resting"
+    mask: Literal["none", "surgical", "n95"] = "none"
 
 
 class GeocodingRequest(BaseModel):
@@ -157,6 +172,23 @@ LOCAL_BIAS_TERMS = {
     "moodbidri",
     "moodabidri",
 }
+
+
+# A blocked or slow network must not make the app hang: give up on the online lookup quickly, and
+# once it has failed skip it for a short while so every following search answers instantly from the
+# offline place list instead of waiting for another timeout.
+GEOCODER_TIMEOUT = httpx.Timeout(6.0, connect=4.0)
+_geocoder_down_until = 0.0
+GEOCODER_COOLDOWN_S = 45.0
+
+
+def _geocoder_is_down() -> bool:
+    return time.time() < _geocoder_down_until
+
+
+def _mark_geocoder_down() -> None:
+    global _geocoder_down_until
+    _geocoder_down_until = time.time() + GEOCODER_COOLDOWN_S
 
 
 def _geocode_candidates(address: str) -> List[str]:
@@ -219,7 +251,7 @@ def _score_geocode_result(query: str, result: dict) -> float:
 
 
 async def _geocode_address(address: str) -> dict:
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=GEOCODER_TIMEOUT) as client:
         best_result = None
         best_score = float("-inf")
 
@@ -241,7 +273,7 @@ async def _geocode_address(address: str) -> dict:
 async def _geocode_results(address: str) -> List[dict]:
     """Fetch worldwide Nominatim results server-side to avoid browser CORS."""
     results_by_id = {}
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=GEOCODER_TIMEOUT) as client:
         for candidate in _geocode_candidates(address):
             for result in await _search_geocoder(client, candidate, 5):
                 result_id = result.get("place_id", result.get("osm_id", result.get("display_name")))
@@ -312,6 +344,24 @@ async def get_aqi(lat: float, lon: float):
         raise HTTPException(status_code=500, detail=f"AQI fetch failed: {str(e)}")
 
 
+@app.get("/api/forecast")
+def get_forecast(lat: float, lon: float):
+    """
+    24-hour PM2.5 forecast for the nearest monitoring station, with its hold-out
+    evaluation against persistence and seasonal-naive baselines.
+    Sync endpoint on purpose: a cold call downloads history and trains models,
+    so FastAPI runs it in a worker thread (results are cached for an hour).
+    """
+    try:
+        return forecast.build_forecast(lat, lon)
+    except forecast.ForecastUnavailable as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Upstream data service failed: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Forecast failed: {e}")
+
+
 @app.post("/api/predict")
 async def post_predict(body: PredictBody):
     """
@@ -356,7 +406,10 @@ async def post_route(req: RouteRequest):
     try:
         origin = (req.origin.lat, req.origin.lon)
         dest = (req.destination.lat, req.destination.lon)
-        result = routing.compute_route(origin, dest)
+        result = routing.compute_route(
+            origin, dest,
+            speed_kmh=req.speed_kmh, activity=req.activity, mask=req.mask,
+        )
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Routing failed: {str(e)}")
@@ -380,36 +433,121 @@ async def post_geocode(req: GeocodingRequest):
     """
     Convert address/city name to lat/lon coordinates using Nominatim (OpenStreetMap).
     Examples: "Delhi, India", "Times Square, New York", "Baker Street, London"
+
+    Typed coordinates ("12.84, 74.92") are used as they are. If the online lookup is unreachable
+    (for example blocked by a campus network) or finds nothing, the bundled offline place list for
+    the Mangaluru area is searched, and the answer says so (`source`: "offline").
     """
-    try:
-        result = await _geocode_address(req.address)
-        return {
-            "lat": float(result["lat"]),
-            "lon": float(result["lon"]),
-            "display_name": result["display_name"],
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Geocoding failed: {str(e)}")
+    direct = gazetteer.parse_coordinates(req.address)
+    if direct:
+        return {"lat": direct["lat"], "lon": direct["lon"], "display_name": direct["display_name"], "source": "coordinates"}
+
+    online_error = None
+    if not _geocoder_is_down():
+        try:
+            result = await _geocode_address(req.address)
+            return {
+                "lat": float(result["lat"]),
+                "lon": float(result["lon"]),
+                "display_name": result["display_name"],
+                "source": "online",
+            }
+        except HTTPException as e:
+            online_error = "not found online" if e.status_code == 404 else str(e.detail)
+        except Exception as e:
+            _mark_geocoder_down()
+            online_error = f"{type(e).__name__}: {e}".strip()
+    else:
+        online_error = "online place search is unreachable (skipped for now)"
+
+    hits = gazetteer.search(req.address, limit=1)
+    if hits:
+        h = hits[0]
+        return {"lat": h["lat"], "lon": h["lon"], "display_name": h["display_name"], "source": "offline"}
+    raise HTTPException(
+        status_code=404,
+        detail=f"Could not find '{req.address}'. Online place search: {online_error}. No match in the offline place list.",
+    )
 
 
 @app.post("/api/geocode/search")
 async def post_geocode_search(req: GeocodingRequest):
-    """Return multiple worldwide geocoding choices for an unambiguous picker."""
+    """Return multiple geocoding choices for an unambiguous picker (online first, offline list as backup)."""
+    direct = gazetteer.parse_coordinates(req.address)
+    if direct:
+        return [{"lat": direct["lat"], "lon": direct["lon"], "display_name": direct["display_name"], "source": "coordinates"}]
+
+    online: List[dict] = []
+    if not _geocoder_is_down():
+        try:
+            results = await _geocode_results(req.address)
+            online = [
+                {
+                    "lat": float(result["lat"]),
+                    "lon": float(result["lon"]),
+                    "display_name": result.get("display_name", req.address),
+                    "source": "online",
+                }
+                for result in results
+                if result.get("lat") is not None and result.get("lon") is not None
+            ]
+        except Exception:
+            _mark_geocoder_down()
+
+    merged = list(online)
+    seen = {(round(r["lat"], 3), round(r["lon"], 3)) for r in merged}
+    for hit in gazetteer.search(req.address, limit=5):
+        key = (round(hit["lat"], 3), round(hit["lon"], 3))
+        if key not in seen and len(merged) < 6:
+            merged.append({"lat": hit["lat"], "lon": hit["lon"], "display_name": hit["display_name"], "source": "offline"})
+            seen.add(key)
+    return merged
+
+
+# Reachability probes for the "Check connection" button: which services does this network let through?
+_NET_TARGETS = [
+    ("Place search", "nominatim.openstreetmap.org", "https://nominatim.openstreetmap.org/status.php?format=json"),
+    ("Place search (backup)", "photon.komoot.io", "https://photon.komoot.io/api/?q=mangalore&limit=1"),
+    ("Road routing (car)", "router.project-osrm.org", "https://router.project-osrm.org/route/v1/driving/74.92,12.84;74.93,12.85?overview=false"),
+    ("Road routing (walk / bike)", "routing.openstreetmap.de", "https://routing.openstreetmap.de/routed-foot/route/v1/driving/74.92,12.84;74.93,12.85?overview=false"),
+    ("Map pictures", "tile.openstreetmap.org", "https://tile.openstreetmap.org/0/0/0.png"),
+    ("Live air quality", "api.openaq.org", "https://api.openaq.org/v3/locations?limit=1"),
+    ("Weather and forecast data", "api.open-meteo.com", "https://api.open-meteo.com/v1/forecast?latitude=12.84&longitude=74.92&hourly=temperature_2m&forecast_days=1"),
+    ("AI assistant (xAI)", "api.x.ai", "https://api.x.ai/v1/models"),
+]
+
+
+async def _probe(client: httpx.AsyncClient, name: str, host: str, url: str) -> dict:
+    start = time.time()
     try:
-        results = await _geocode_results(req.address)
-        return [
-            {
-                "lat": float(result["lat"]),
-                "lon": float(result["lon"]),
-                "display_name": result.get("display_name", req.address),
-            }
-            for result in results
-            if result.get("lat") is not None and result.get("lon") is not None
-        ]
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Geocoding search failed: {str(e)}")
+        r = await client.get(url, headers={"User-Agent": "AeroHealth/1.0 (connection check)"})
+        ms = round((time.time() - start) * 1000)
+        # Any HTTP answer means the host is reachable. 401 only means "needs a key".
+        if r.status_code in (403, 429, 451):
+            return {"name": name, "host": host, "ok": False, "ms": ms, "detail": f"reachable but refusing requests (HTTP {r.status_code}): rate-limited or filtered"}
+        if r.status_code >= 500:
+            return {"name": name, "host": host, "ok": False, "ms": ms, "detail": f"service error (HTTP {r.status_code})"}
+        return {"name": name, "host": host, "ok": True, "ms": ms, "detail": "reachable"}
+    except httpx.ConnectTimeout:
+        return {"name": name, "host": host, "ok": False, "ms": round((time.time() - start) * 1000), "detail": "no answer (timed out): probably blocked by the network"}
+    except httpx.TimeoutException:
+        return {"name": name, "host": host, "ok": False, "ms": round((time.time() - start) * 1000), "detail": "very slow (timed out)"}
+    except httpx.HTTPError as e:
+        return {"name": name, "host": host, "ok": False, "ms": round((time.time() - start) * 1000), "detail": f"cannot connect: {type(e).__name__}"}
+
+
+@app.get("/api/net-check")
+async def net_check():
+    """Which online services can this computer reach right now? (~5 s at most.)"""
+    async with httpx.AsyncClient(timeout=httpx.Timeout(5.0, connect=4.0), follow_redirects=True) as client:
+        results = await asyncio.gather(*[_probe(client, n, h, u) for n, h, u in _NET_TARGETS])
+    return {
+        "checked_at": datetime.utcnow().isoformat() + "Z",
+        "services": results,
+        "offline_places": gazetteer.available(),
+        # Settings that look like "the internet is blocked" but are really a missing key.
+        "config": {"openaq_key": aqi._openaq_headers() is not None},
+    }
 
 
 @app.get("/api/history")

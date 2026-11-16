@@ -4,14 +4,16 @@ import { CircleMarker, MapContainer, Polyline, TileLayer, useMap } from "react-l
 import { LatLngBounds } from "leaflet";
 import { useEffect } from "react";
 
+import { routesCoincide } from "@/lib/aero/route-metrics";
 import type { LatLon, RouteComparison } from "@/lib/aero/types";
 
 function Recenter({ loc, routes }: { loc: LatLon; routes?: RouteComparison | undefined }) {
   const map = useMap();
   useEffect(() => {
     const routeCoordinates = [
-      ...(routes?.direct_route.geojson as { coordinates?: [number, number][] })?.coordinates ?? [],
-      ...(routes?.safe_route.geojson as { coordinates?: [number, number][] })?.coordinates ?? [],
+      ...((routes?.direct_route.geojson as { coordinates?: [number, number][] })?.coordinates ??
+        []),
+      ...((routes?.safe_route.geojson as { coordinates?: [number, number][] })?.coordinates ?? []),
     ];
 
     if (routeCoordinates.length > 1) {
@@ -88,11 +90,24 @@ export default function MapCanvas({
       <CircleMarker
         center={[loc.lat, loc.lon]}
         radius={5}
-        pathOptions={{ color: "var(--primary)", weight: 2, fillColor: "var(--primary)", fillOpacity: 1 }}
+        pathOptions={{
+          color: "var(--primary)",
+          weight: 2,
+          fillColor: "var(--primary)",
+          fillOpacity: 1,
+        }}
       />
 
       {routes ? (
         <>
+          {/* Other roads the person could take: thin grey lines under the safe and direct routes. */}
+          {routes.alternatives?.map((alt, index) => (
+            <Polyline
+              key={`alt-${index}`}
+              positions={toLatLngs(alt.geojson)}
+              pathOptions={{ color: "#94a3b8", weight: 4, opacity: 0.85 }}
+            />
+          ))}
           <Polyline
             positions={toLatLngs(routes.direct_route.geojson)}
             pathOptions={{
@@ -118,6 +133,19 @@ export default function MapCanvas({
               className: "route-draw",
             }}
           />
+          {routesCoincide(routes) ? (
+            // Same road: draw the direct route as red dashes on top so both are visible.
+            <Polyline
+              positions={toLatLngs(routes.direct_route.geojson)}
+              pathOptions={{
+                color: "#ef4444",
+                weight: 3,
+                opacity: 1,
+                dashArray: "2 10",
+                lineCap: "round",
+              }}
+            />
+          ) : null}
         </>
       ) : null}
     </MapContainer>

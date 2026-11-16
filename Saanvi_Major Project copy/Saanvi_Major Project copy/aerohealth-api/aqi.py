@@ -1,13 +1,18 @@
 """
 AQI data fetching from OpenAQ v3 API with caching.
 """
+import os
 import time
 from typing import Optional, Dict, Tuple
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # In-memory cache: (lat_rounded, lon_rounded) -> (response_dict, timestamp)
 _cache: Dict[Tuple[float, float], Tuple[dict, float]] = {}
 CACHE_TTL = 300  # 5 minutes
+_openaq_down_until = 0.0  # set when OpenAQ cannot be reached; see fetch_aqi
 
 def round_coords(lat: float, lon: float) -> Tuple[float, float]:
     """Round to 3 decimals for cache key."""
@@ -33,100 +38,138 @@ async def fetch_aqi(lat: float, lon: float) -> dict:
         if now - ts < CACHE_TTL:
             return data
     
-    # Fetch from OpenAQ v3
-    try:
-        result = await _fetch_from_openaq(lat, lon)
-        if result:
-            result["requested_lat"] = lat
-            result["requested_lon"] = lon
-            result["location_specific"] = True
-            _cache[key] = (result, now)
-            return result
-    except Exception as e:
-        print(f"OpenAQ fetch failed for {lat},{lon}: {e}")
+    # Fetch from OpenAQ v3. If it just failed (blocked network, outage), skip it for a minute so the
+    # dashboard answers at once from the labelled simulation instead of waiting on every request.
+    global _openaq_down_until
+    if now >= _openaq_down_until:
+        try:
+            result = await _fetch_from_openaq(lat, lon)
+            if result:
+                result["requested_lat"] = lat
+                result["requested_lon"] = lon
+                result["location_specific"] = True
+                _cache[key] = (result, now)
+                return result
+        except httpx.TransportError as e:
+            _openaq_down_until = now + 60.0
+            print(f"OpenAQ unreachable for {lat},{lon}: {e}")
+        except Exception as e:
+            print(f"OpenAQ fetch failed for {lat},{lon}: {e}")
     
     # Keep the requested coordinates when live monitoring data is unavailable.
     print(f"WARNING: Using location-specific synthetic data for {lat},{lon} - OpenAQ unavailable")
     return _synthetic_fallback(lat, lon)
 
 
+OPENAQ_BASE = "https://api.openaq.org/v3"
+MAX_AGE_HOURS = 6      # a reading older than this is treated as "no live data"
+SEARCH_RADIUS_M = 25000
+MAX_CANDIDATES = 5     # nearest stations to try before giving up
+
+# ppb -> ug/m3 at 25 C, 1 atm (molecular weight / 24.45)
+_UG_PER_PPB = {"no2": 1.88, "o3": 1.96, "so2": 2.62}
+
+
+def _openaq_headers() -> Optional[dict]:
+    key = os.getenv("OPENAQ_API_KEY", "").strip()
+    return {"X-API-Key": key} if key else None
+
+
+def _to_app_units(name: str, value: float, units: str) -> float:
+    """Frontend units: PM in ug/m3; NO2, O3 and SO2 in ppb (as the dashboard labels them)."""
+    if name in _UG_PER_PPB and (units or "").lower() != "ppb":
+        return value / _UG_PER_PPB[name]   # sensor reports ug/m3 -> convert to ppb
+    return value
+
+
+def _parse_dt(text: str):
+    from datetime import datetime, timezone
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
 async def _fetch_from_openaq(lat: float, lon: float) -> Optional[dict]:
     """
-    Call OpenAQ v3 API for latest measurements near the given coordinates.
-    Returns None if no nearby station found.
+    Latest readings from the nearest OpenAQ v3 station that has fresh PM2.5.
+    v3 requires an API key (X-API-Key) and reports values per *sensor id*, so the
+    pollutant names come from the location's sensor list. Returns None when there
+    is no key, no nearby station, or only stale data.
     """
-    url = "https://api.openaq.org/v3/locations"
+    from datetime import datetime, timezone
+
+    headers = _openaq_headers()
+    if headers is None:
+        print("OPENAQ_API_KEY is not set - skipping live data")
+        return None
+
     params = {
         "coordinates": f"{lat},{lon}",
-        "radius": "25000",  # 25km search radius
-        "limit": 1,
-        "order_by": "distance",
+        "radius": str(SEARCH_RADIUS_M),
+        "limit": MAX_CANDIDATES,  # v3 returns nearest-first when coordinates are given
     }
-    
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(url, params=params)
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=4.0), headers=headers) as client:
+        resp = await client.get(f"{OPENAQ_BASE}/locations", params=params)
         resp.raise_for_status()
-        data = resp.json()
-        
-        if not data.get("results"):
-            return None
-        
-        location = data["results"][0]
-        location_id = location["id"]
-        
-        # Fetch latest measurements for this location
-        measurements_url = "https://api.openaq.org/v3/locations/{}/latest".format(location_id)
-        meas_resp = await client.get(measurements_url)
-        meas_resp.raise_for_status()
-        meas_data = meas_resp.json()
-        
-        return _parse_openaq_response(meas_data, location)
+        locations = resp.json().get("results") or []
+
+        now = datetime.now(timezone.utc)
+        for location in locations:
+            sensors = {
+                s["id"]: (
+                    (s.get("parameter") or {}).get("name", "").lower(),
+                    (s.get("parameter") or {}).get("units", ""),
+                )
+                for s in location.get("sensors", [])
+            }
+            if not any(name in ("pm25", "pm2.5") for name, _ in sensors.values()):
+                continue
+
+            lresp = await client.get(f"{OPENAQ_BASE}/locations/{location['id']}/latest")
+            lresp.raise_for_status()
+
+            # Several sensors can report the same pollutant (old and new
+            # instruments): keep the newest reading for each one.
+            best: Dict[str, Tuple[float, object, str]] = {}
+            for item in lresp.json().get("results") or []:
+                name, units = sensors.get(item.get("sensorsId"), ("", ""))
+                value = item.get("value")
+                when = _parse_dt(((item.get("datetime") or {}).get("utc")) or "")
+                if not name or value is None or when is None:
+                    continue
+                if name == "pm2.5":
+                    name = "pm25"
+                if name not in best or when > best[name][1]:
+                    best[name] = (_to_app_units(name, float(value), units), when, units)
+
+            pm = best.get("pm25")
+            if pm is None or (now - pm[1]).total_seconds() > MAX_AGE_HOURS * 3600:
+                continue  # nearest station has no fresh PM2.5; try the next one
+
+            return _build_reading(best, location, pm[1])
+    return None
 
 
-def _parse_openaq_response(meas_data: dict, location: dict) -> dict:
-    """
-    Parse OpenAQ v3 latest measurements into our AqiReading format.
-    Rounds all values to match frontend precision requirements.
-    """
-    from datetime import datetime
-    
-    # Extract measurements by parameter
-    measurements = {}
-    if "results" in meas_data and meas_data["results"]:
-        for param in meas_data["results"][0].get("parameters", []):
-            param_name = param.get("parameter", {}).get("name", "").lower()
-            value = param.get("value")
-            if value is not None:
-                measurements[param_name] = value
-    
-    # Map OpenAQ parameter names to our fields
-    pm25 = measurements.get("pm25", measurements.get("pm2.5", 25.0))
-    pm10 = measurements.get("pm10", 42.0)
-    no2 = measurements.get("no2", 18.0)
-    o3 = measurements.get("o3", 35.0)
-    so2 = measurements.get("so2", 8.0)
-    
-    # Estimate AQI from PM2.5 (simplified US EPA formula)
-    aqi = _pm25_to_aqi(pm25)
-    
-    # OpenAQ doesn't always provide temperature/humidity, use reasonable defaults
-    temperature = measurements.get("temperature", 22.0)
-    humidity = measurements.get("humidity", 65.0)
-    
-    station_name = location.get("name", "Unknown Station")
-    timestamp = datetime.utcnow().isoformat() + "Z"
-    
+def _build_reading(best: dict, location: dict, when) -> dict:
+    """Map the freshest value per pollutant to our AqiReading fields."""
+    def get(name, default):
+        return best[name][0] if name in best else default
+
+    pm25 = get("pm25", 25.0)
     return {
-        "aqi": round(aqi),  # integer
+        "aqi": round(_pm25_to_aqi(pm25)),
         "pm25": round(pm25, 1),
-        "pm10": round(pm10, 1),
-        "no2": round(no2, 1),
-        "o3": round(o3, 1),
-        "so2": round(so2, 1),
-        "temperature": round(temperature, 1),
-        "humidity": round(humidity),  # integer
-        "station": station_name,
-        "timestamp": timestamp,
+        "pm10": round(get("pm10", pm25 * 1.6), 1),
+        "no2": round(get("no2", 18.0), 1),
+        "o3": round(get("o3", 20.0), 1),
+        "so2": round(get("so2", 5.0), 1),
+        "temperature": round(get("temperature", 25.0), 1),
+        "humidity": round(get("relativehumidity", 65.0)),
+        "station": location.get("name") or "OpenAQ station",
+        "timestamp": when.strftime("%Y-%m-%dT%H:%M:%S") + "Z",
+        "data_source": "openaq",
+        "measured": sorted(best.keys()),
     }
 
 
@@ -174,6 +217,7 @@ def _synthetic_fallback(lat: float, lon: float) -> dict:
         "temperature": round(14 + r * 18, 1),
         "humidity": round(38 + (1 - r) * 44),
         "station": "FALLBACK-SIM",
+        "data_source": "synthetic",
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "requested_lat": lat,
         "requested_lon": lon,

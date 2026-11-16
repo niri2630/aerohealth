@@ -1,0 +1,783 @@
+{
+"attribution": "Place names and coordinates (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
+"region": "Mangaluru / Udupi coast, Karnataka, India",
+"places": [
+{
+"name": "Hampankatta Bus stop",
+"display": "Hampankatta Bus stop, Light House Hill Road, Attavar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.86912,
+"lon": 74.843432,
+"kind": "landmark"
+},
+{
+"name": "Mangalore KSRTC Bus Stand",
+"display": "Mangalore KSRTC Bus Stand, Ladyhill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.884686,
+"lon": 74.841776,
+"kind": "landmark"
+},
+{
+"name": "Mangaluru Central",
+"display": "Mangaluru Central, Railway Station Road, Attavar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.863404,
+"lon": 74.843239,
+"kind": "landmark"
+},
+{
+"name": "Mangaluru Junction",
+"display": "Mangaluru Junction, Kankanady Railway Station Road, Darbar Hill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.866628,
+"lon": 74.879231,
+"kind": "landmark"
+},
+{
+"name": "Kadri Park",
+"display": "Kadri Park, Nanthoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.889105,
+"lon": 74.856202,
+"kind": "landmark"
+},
+{
+"name": "Kankanady",
+"display": "Kankanady, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.864648,
+"lon": 74.860003,
+"kind": "landmark"
+},
+{
+"name": "Bejai Kavoor Road",
+"display": "Bejai Kavoor Road, Kuntikan, Urva, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.895802,
+"lon": 74.841763,
+"kind": "landmark"
+},
+{
+"name": "Kottara Chowki",
+"display": "Kottara Chowki, NH66, Kodikal, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.910302,
+"lon": 74.836243,
+"kind": "landmark"
+},
+{
+"name": "National Institute of Technology, Karnataka",
+"display": "National Institute of Technology, Karnataka, Gate to library, Surathkal, Mangaluru taluk, Dakshina Kannada, Karnataka, 575014, India",
+"lat": 13.011191,
+"lon": 74.796058,
+"kind": "landmark"
+},
+{
+"name": "Surathkal",
+"display": "Surathkal, Krishnapura Road, Krishnapura, Surathkal, Mangaluru taluk, Dakshina Kannada, Karnataka, 575014, India",
+"lat": 12.990243,
+"lon": 74.805352,
+"kind": "landmark"
+},
+{
+"name": "Panambur Beach",
+"display": "Panambur Beach, Panambur, Mangaluru taluk, Dakshina Kannada, Karnataka, India",
+"lat": 12.937306,
+"lon": 74.804236,
+"kind": "landmark"
+},
+{
+"name": "Tannirbhavi Beach",
+"display": "Tannirbhavi Beach, Kudroli, Tanniru Bavi, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.90809,
+"lon": 74.81017,
+"kind": "landmark"
+},
+{
+"name": "Ullal",
+"display": "Ullal, Mangaluru-Kasargod Highway, ಕೋಟೆಕಾರ, Ullala taluk, Dakshina Kannada, Karnataka, 575020, India",
+"lat": 12.792366,
+"lon": 74.854886,
+"kind": "landmark"
+},
+{
+"name": "St. Aloysius PU College",
+"display": "St. Aloysius PU College, St Aloysius Internal Road, Bendoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.873889,
+"lon": 74.844708,
+"kind": "landmark"
+},
+{
+"name": "University Medical Center (KMC)",
+"display": "University Medical Center (KMC), Falnir-Jyothi Road, Attavar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.87176,
+"lon": 74.848976,
+"kind": "landmark"
+},
+{
+"name": "Father Muller Hospital",
+"display": "Father Muller Hospital, Father Muller Campus Road, Kankanady, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575002, India",
+"lat": 12.866241,
+"lon": 74.859738,
+"kind": "landmark"
+},
+{
+"name": "Forum Fiza Mall",
+"display": "Forum Fiza Mall, Bunder, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.85798,
+"lon": 74.83831,
+"kind": "landmark"
+},
+{
+"name": "City Centre Mall",
+"display": "City Centre Mall, Karnad Sadashiva Rao Road, Dongerkeri, Attavar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.871252,
+"lon": 74.842825,
+"kind": "landmark"
+},
+{
+"name": "Srinivas Institute Of Technology",
+"display": "Srinivas Institute Of Technology, Library Block Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.875478,
+"lon": 74.939626,
+"kind": "landmark"
+},
+{
+"name": "Adyar",
+"display": "Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.868623,
+"lon": 74.929288,
+"kind": "landmark"
+},
+{
+"name": "Jeppu Park",
+"display": "Jeppu Park, Bolar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.848763,
+"lon": 74.848938,
+"kind": "landmark"
+},
+{
+"name": "Falnir-Jyothi Road",
+"display": "Falnir-Jyothi Road, Bendoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.87114,
+"lon": 74.849112,
+"kind": "landmark"
+},
+{
+"name": "Bajpe Road",
+"display": "Bajpe Road, Kadri Hills, Nanthoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.890832,
+"lon": 74.858863,
+"kind": "landmark"
+},
+{
+"name": "Moodbidri Interstate/interdistict Bus Stand",
+"display": "Moodbidri Interstate/interdistict Bus Stand, Moodabidri, Moodabidri taluk, Dakshina Kannada, Karnataka, 574227, India",
+"lat": 13.068365,
+"lon": 74.994715,
+"kind": "landmark"
+},
+{
+"name": "Mulki",
+"display": "Mulki, SH70, Kenchanakere, Kinnigoli, Mulki taluk, Dakshina Kannada, Karnataka, 574150, India",
+"lat": 13.068958,
+"lon": 74.805273,
+"kind": "landmark"
+},
+{
+"name": "Kinnigoli",
+"display": "Kinnigoli, Mulki taluk, Dakshina Kannada, Karnataka, 574150, India",
+"lat": 13.06371,
+"lon": 74.847974,
+"kind": "landmark"
+},
+{
+"name": "Panambur",
+"display": "Panambur, NH66, New Mangalore Port, Baikampady, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.945576,
+"lon": 74.807899,
+"kind": "landmark"
+},
+{
+"name": "Vamanjoor - Pilikula Nisargadhama Road",
+"display": "Vamanjoor - Pilikula Nisargadhama Road, Vamanjoor, Mangaluru taluk, Dakshina Kannada, Karnataka, 575028, India",
+"lat": 12.919309,
+"lon": 74.898667,
+"kind": "landmark"
+},
+{
+"name": "Central Market",
+"display": "Central Market, Bibi Alabi Road, Bunder, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.866662,
+"lon": 74.838894,
+"kind": "landmark"
+},
+{
+"name": "Mangaluru",
+"display": "Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.869825,
+"lon": 74.843013,
+"kind": "landmark"
+},
+{
+"name": "Bendoor",
+"display": "Bendoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.872222,
+"lon": 74.855508,
+"kind": "landmark"
+},
+{
+"name": "Orphic Garden",
+"display": "Orphic Garden, Kavoor, SH67, Bolpugudde, Kavoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575015, India",
+"lat": 12.918064,
+"lon": 74.85935,
+"kind": "landmark"
+},
+{
+"name": "Padil",
+"display": "Padil, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.872159,
+"lon": 74.886759,
+"kind": "landmark"
+},
+{
+"name": "Attavar",
+"display": "Attavar, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.860548,
+"lon": 74.848063,
+"kind": "landmark"
+},
+{
+"name": "Karavali Group of Institutions",
+"display": "Karavali Group of Institutions, Prince Caterers, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.894099,
+"lon": 74.925458,
+"kind": "nearby"
+},
+{
+"name": "Sahyadri Institute of Technology",
+"display": "Sahyadri Institute of Technology, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.866809,
+"lon": 74.925872,
+"kind": "nearby"
+},
+{
+"name": "Nithya Sahaya Matha School",
+"display": "Nithya Sahaya Matha School, Meramajal Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.884194,
+"lon": 74.946472,
+"kind": "nearby"
+},
+{
+"name": "Holy Family School",
+"display": "Holy Family School, Holy Family Church Rd, Kumpanamajalu, Bantwal taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.887077,
+"lon": 74.94974,
+"kind": "nearby"
+},
+{
+"name": "Expert Pre-University College",
+"display": "Expert Pre-University College, SBI ATM, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.877732,
+"lon": 74.941721,
+"kind": "nearby"
+},
+{
+"name": "Expert Pre-University college",
+"display": "Expert Pre-University college, Srinivas Institute Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.875999,
+"lon": 74.941014,
+"kind": "nearby"
+},
+{
+"name": "Holy Family Church Ground",
+"display": "Holy Family Church Ground, Holy Family Church Rd, Kumpanamajalu, Bantwal taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.887219,
+"lon": 74.950123,
+"kind": "nearby"
+},
+{
+"name": "Holy Family Church",
+"display": "Holy Family Church, Holy Family Church Rd, Kumpanamajalu, Bantwal taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.887314,
+"lon": 74.950554,
+"kind": "nearby"
+},
+{
+"name": "St Joseph The Worker Church Neermarga",
+"display": "St Joseph The Worker Church Neermarga, Pereira Villa Road, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.879798,
+"lon": 74.925845,
+"kind": "nearby"
+},
+{
+"name": "ST. Charles Borromeo Convent",
+"display": "ST. Charles Borromeo Convent, Meramajal Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.883743,
+"lon": 74.946451,
+"kind": "nearby"
+},
+{
+"name": "badriya juma masjid",
+"display": "badriya juma masjid, yusuf nagara road, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.866125,
+"lon": 74.907519,
+"kind": "nearby"
+},
+{
+"name": "badriya hayatul islam madrasa",
+"display": "badriya hayatul islam madrasa, borugudde road, Saripalla, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.869846,
+"lon": 74.906582,
+"kind": "nearby"
+},
+{
+"name": "Jain Temple",
+"display": "Jain Temple, Meramajal Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.878652,
+"lon": 74.94768,
+"kind": "nearby"
+},
+{
+"name": "Salafi masjid",
+"display": "Salafi masjid, Ganada bettu road, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.868635,
+"lon": 74.907123,
+"kind": "nearby"
+},
+{
+"name": "Manala masjid",
+"display": "Manala masjid, manala, Saripalla, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.867717,
+"lon": 74.908601,
+"kind": "nearby"
+},
+{
+"name": "Vaikundam",
+"display": "Vaikundam, Library Block Road, Bangalagudde, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 574202, India",
+"lat": 12.874948,
+"lon": 74.939241,
+"kind": "nearby"
+},
+{
+"name": "Bank Of Baroda",
+"display": "Bank Of Baroda, Solapur-Mangalore Highway, Kulashekara, Kudupu, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.894727,
+"lon": 74.908558,
+"kind": "nearby"
+},
+{
+"name": "Tandoor",
+"display": "Tandoor, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.86845,
+"lon": 74.925562,
+"kind": "nearby"
+},
+{
+"name": "POGO",
+"display": "POGO, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.867876,
+"lon": 74.924221,
+"kind": "nearby"
+},
+{
+"name": "Kerala Mess",
+"display": "Kerala Mess, Girls Hoste l Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.872176,
+"lon": 74.938423,
+"kind": "nearby"
+},
+{
+"name": "Boys Hostel",
+"display": "Boys Hostel, Automobile Lab Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.876945,
+"lon": 74.939057,
+"kind": "nearby"
+},
+{
+"name": "Girls Hostel",
+"display": "Girls Hostel, Girls Hoste l Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.873915,
+"lon": 74.938479,
+"kind": "nearby"
+},
+{
+"name": "Sahyadri Bus Stop",
+"display": "Sahyadri Bus Stop, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.868069,
+"lon": 74.926625,
+"kind": "nearby"
+},
+{
+"name": "Valachil Bus Stop",
+"display": "Valachil Bus Stop, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.868713,
+"lon": 74.937663,
+"kind": "nearby"
+},
+{
+"name": "Adyar Post Bus Stop",
+"display": "Adyar Post Bus Stop, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.868343,
+"lon": 74.931005,
+"kind": "nearby"
+},
+{
+"name": "Valachil Bustop",
+"display": "Valachil Bustop, Srinivas Institute Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.874811,
+"lon": 74.940419,
+"kind": "nearby"
+},
+{
+"name": "Merlapadav Bustop",
+"display": "Merlapadav Bustop, Pereira Villa Road, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.878827,
+"lon": 74.929433,
+"kind": "nearby"
+},
+{
+"name": "Ontemaar Bustop",
+"display": "Ontemaar Bustop, Prince Caterers, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.887905,
+"lon": 74.919262,
+"kind": "nearby"
+},
+{
+"name": "Kelarai Bustop",
+"display": "Kelarai Bustop, Solapur-Mangalore Highway, Kulashekara, Kudupu, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.894144,
+"lon": 74.905935,
+"kind": "nearby"
+},
+{
+"name": "Merlapadav Bustop 2",
+"display": "Merlapadav Bustop 2, Prince Caterers, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.882272,
+"lon": 74.9327,
+"kind": "nearby"
+},
+{
+"name": "Adyarpadav Bustop",
+"display": "Adyarpadav Bustop, Pereira Villa Road, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.879382,
+"lon": 74.924508,
+"kind": "nearby"
+},
+{
+"name": "Kuttikala Bustop",
+"display": "Kuttikala Bustop, Prince Caterers, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.889446,
+"lon": 74.915432,
+"kind": "nearby"
+},
+{
+"name": "Club HP Petrol Pump",
+"display": "Club HP Petrol Pump, NH73, Bajal, Adyar, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.868424,
+"lon": 74.925911,
+"kind": "nearby"
+},
+{
+"name": "Srinivas Institute Road",
+"display": "Srinivas Institute Road, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.874983,
+"lon": 74.939505,
+"kind": "nearby"
+},
+{
+"name": "Srinivas Institute Of Technology",
+"display": "Srinivas Institute Of Technology, Srinivas Institute Road, Bangalagudde, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 574202, India",
+"lat": 12.874131,
+"lon": 74.939711,
+"kind": "nearby"
+},
+{
+"name": "Kannur Library",
+"display": "Kannur Library, kundala road, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575007, India",
+"lat": 12.869639,
+"lon": 74.905889,
+"kind": "nearby"
+},
+{
+"name": "College Ground",
+"display": "College Ground, SBI ATM, Bangalagudde, Valachil, Mangaluru taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.875705,
+"lon": 74.9398,
+"kind": "nearby"
+},
+{
+"name": "Holy Family School Ground",
+"display": "Holy Family School Ground, Holy Family Church Rd, Kumpanamajalu, Bantwal taluk, Dakshina Kannada, Karnataka, 574143, India",
+"lat": 12.886964,
+"lon": 74.949762,
+"kind": "nearby"
+},
+{
+"name": "Srinivas Institute Road",
+"display": "Srinivas Institute Road, Mangaluru, Karnataka, India",
+"lat": 12.874979,
+"lon": 74.939701,
+"kind": "street"
+},
+{
+"name": "Meramajal Road",
+"display": "Meramajal Road, Mangaluru, Karnataka, India",
+"lat": 12.879516,
+"lon": 74.947266,
+"kind": "street"
+},
+{
+"name": "kundala road",
+"display": "kundala road, Mangaluru, Karnataka, India",
+"lat": 12.869787,
+"lon": 74.905631,
+"kind": "street"
+},
+{
+"name": "Beedu road",
+"display": "Beedu road, Mangaluru, Karnataka, India",
+"lat": 12.869098,
+"lon": 74.903359,
+"kind": "street"
+},
+{
+"name": "Ganada bettu road",
+"display": "Ganada bettu road, Mangaluru, Karnataka, India",
+"lat": 12.868207,
+"lon": 74.906649,
+"kind": "street"
+},
+{
+"name": "manala",
+"display": "manala, Mangaluru, Karnataka, India",
+"lat": 12.868526,
+"lon": 74.90769,
+"kind": "street"
+},
+{
+"name": "kempugudde road",
+"display": "kempugudde road, Mangaluru, Karnataka, India",
+"lat": 12.869644,
+"lon": 74.907371,
+"kind": "street"
+},
+{
+"name": "borugudde road",
+"display": "borugudde road, Mangaluru, Karnataka, India",
+"lat": 12.870481,
+"lon": 74.906597,
+"kind": "street"
+},
+{
+"name": "Adyar Post Road",
+"display": "Adyar Post Road, Mangaluru, Karnataka, India",
+"lat": 12.869577,
+"lon": 74.93075,
+"kind": "street"
+},
+{
+"name": "Girls Hoste l Road",
+"display": "Girls Hoste l Road, Mangaluru, Karnataka, India",
+"lat": 12.874451,
+"lon": 74.939018,
+"kind": "street"
+},
+{
+"name": "Library Block Road",
+"display": "Library Block Road, Mangaluru, Karnataka, India",
+"lat": 12.875461,
+"lon": 74.939046,
+"kind": "street"
+},
+{
+"name": "Architecture Block Road",
+"display": "Architecture Block Road, Mangaluru, Karnataka, India",
+"lat": 12.875022,
+"lon": 74.93892,
+"kind": "street"
+},
+{
+"name": "Automobile Lab Road",
+"display": "Automobile Lab Road, Mangaluru, Karnataka, India",
+"lat": 12.876106,
+"lon": 74.938869,
+"kind": "street"
+},
+{
+"name": "Arkul Bail",
+"display": "Arkul Bail, Mangaluru, Karnataka, India",
+"lat": 12.874885,
+"lon": 74.943945,
+"kind": "street"
+},
+{
+"name": "Pereira Villa Road",
+"display": "Pereira Villa Road, Mangaluru, Karnataka, India",
+"lat": 12.878754,
+"lon": 74.932243,
+"kind": "street"
+},
+{
+"name": "yusuf nagara road",
+"display": "yusuf nagara road, Mangaluru, Karnataka, India",
+"lat": 12.865976,
+"lon": 74.906762,
+"kind": "street"
+},
+{
+"name": "Prince Caterers",
+"display": "Prince Caterers, Mangaluru, Karnataka, India",
+"lat": 12.879538,
+"lon": 74.932376,
+"kind": "street"
+},
+{
+"name": "Prince Caterers Shed",
+"display": "Prince Caterers Shed, Mangaluru, Karnataka, India",
+"lat": 12.879443,
+"lon": 74.93256,
+"kind": "street"
+},
+{
+"name": "Pumpwell",
+"display": "West Gate Centre, D. No 7-49/6, Kankanady, Pumpwell,, NH73, Nethravati Nagara, Kankanady, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575002, India",
+"lat": 12.869615,
+"lon": 74.86606,
+"kind": "landmark"
+},
+{
+"name": "Mangalore University",
+"display": "Mangalore University, KC Road, Pilikuru, Ullala taluk, Dakshina Kannada, Karnataka, 575018, India",
+"lat": 12.816553,
+"lon": 74.92608,
+"kind": "landmark"
+},
+{
+"name": "Konaje",
+"display": "Konaje, Ullala taluk, Dakshina Kannada, Karnataka, 574199, India",
+"lat": 12.820169,
+"lon": 74.928293,
+"kind": "landmark"
+},
+{
+"name": "Deralakatte",
+"display": "Deralakatte, Ullala taluk, Dakshina Kannada, Karnataka, 575018, India",
+"lat": 12.809008,
+"lon": 74.89824,
+"kind": "landmark"
+},
+{
+"name": "Yenepoya Wood Industries",
+"display": "Yenepoya Wood Industries, Kodikal, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.898226,
+"lon": 74.824075,
+"kind": "landmark"
+},
+{
+"name": "Yenepoya Medical and Dental College and Hospital",
+"display": "Yenepoya Medical and Dental College and Hospital, KC Road, Pilikuru, Ullala taluk, Dakshina Kannada, Karnataka, 575018, India",
+"lat": 12.810059,
+"lon": 74.878019,
+"kind": "landmark"
+},
+{
+"name": "Mangalore International Airport",
+"display": "Mangalore International Airport, Airport Entry Road (Arrivals), Kenjar, Mangaluru taluk, Dakshina Kannada, Karnataka, 574142, India",
+"lat": 12.954618,
+"lon": 74.884718,
+"kind": "landmark"
+},
+{
+"name": "Bajpe",
+"display": "Bajpe, SH67, Bhatrakere, Mangaluru taluk, Dakshina Kannada, Karnataka, 574509, India",
+"lat": 12.980744,
+"lon": 74.884153,
+"kind": "landmark"
+},
+{
+"name": "Jyothi",
+"display": "Jyothi, Bridge Road, Bendoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.873881,
+"lon": 74.848906,
+"kind": "landmark"
+},
+{
+"name": "Jyothi",
+"display": "Jyothi, Balmatta Road, Bendoor, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.873363,
+"lon": 74.848566,
+"kind": "landmark"
+},
+{
+"name": "Kavoor",
+"display": "Kavoor, Bondel, Mangaluru taluk, Dakshina Kannada, Karnataka, 575015, India",
+"lat": 12.925347,
+"lon": 74.857704,
+"kind": "landmark"
+},
+{
+"name": "Udupi",
+"display": "Udupi, Udupi taluku, Udupi, Karnataka, 576101, India",
+"lat": 13.341917,
+"lon": 74.747323,
+"kind": "landmark"
+},
+{
+"name": "Moodabidri Bus Stand",
+"display": "Moodabidri Bus Stand, Solapur-Mangalore Highway, Moodabidri, Moodabidri taluk, Dakshina Kannada, Karnataka, 574227, India",
+"lat": 13.068264,
+"lon": 74.995725,
+"kind": "landmark"
+},
+{
+"name": "Surathkal Beach",
+"display": "Surathkal Beach, Surathkal, Mangaluru taluk, Dakshina Kannada, Karnataka, 575014, India",
+"lat": 12.999475,
+"lon": 74.791285,
+"kind": "landmark"
+},
+{
+"name": "Kudroli",
+"display": "Kudroli, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.876552,
+"lon": 74.83024,
+"kind": "landmark"
+},
+{
+"name": "Bunder",
+"display": "Bunder, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.861743,
+"lon": 74.832809,
+"kind": "landmark"
+},
+{
+"name": "Bunder",
+"display": "Bunder, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.855357,
+"lon": 74.834536,
+"kind": "landmark"
+},
+{
+"name": "Mannagudda Warehouse",
+"display": "Mannagudda Warehouse, Ladyhill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.881915,
+"lon": 74.835357,
+"kind": "landmark"
+},
+{
+"name": "Mannagudda 2nd Cross",
+"display": "Mannagudda 2nd Cross, Gandhinagar, Ladyhill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.883264,
+"lon": 74.835598,
+"kind": "landmark"
+},
+{
+"name": "Urwa Market Road",
+"display": "Urwa Market Road, Gandhinagar, Ladyhill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.889223,
+"lon": 74.83253,
+"kind": "landmark"
+},
+{
+"name": "Canara Urwa School",
+"display": "Canara Urwa School, Nehru Avenue, Gandhinagar, Ladyhill, Mangaluru, Mangaluru taluk, Dakshina Kannada, Karnataka, 575001, India",
+"lat": 12.884387,
+"lon": 74.835223,
+"kind": "landmark"
+}
+]
+}

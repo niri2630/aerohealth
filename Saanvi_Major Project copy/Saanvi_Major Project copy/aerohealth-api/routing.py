@@ -11,6 +11,8 @@ import networkx as nx
 import math
 import httpx
 
+import exposure_profile as prof
+
 # Global graph cache: location_key -> graph
 _graphs: Dict[str, nx.MultiDiGraph] = {}
 _aqi_cache: Dict[Tuple[float, float], float] = {}
@@ -24,6 +26,9 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 # Verified demo coordinates (both resolve to nodes in demo_graph.pickle)
 DEMO_ORIGIN = (12.841690, 74.922980)
 DEMO_DEST = (12.894754, 74.946824)
+
+# When the public router cannot be reached, skip it for a short while (see _osrm_route).
+_osrm_down_until = 0.0
 
 # Tunable parameter: how much to weight AQI vs distance.
 # Used as a multiplier on edge length so pollution can change the chosen path.
@@ -396,8 +401,98 @@ def _pollutants_for_coordinates(coordinates: list) -> Dict[str, float]:
     return {name: round(value / count, 1) for name, value in totals.items()}
 
 
-def _osrm_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Optional[Dict]:
+# ---------------------------------------------------------------------------
+# Personalisation: traveller speed, breathing rate and mask -> inhaled dose
+# ---------------------------------------------------------------------------
+
+_POLLUTANTS = ("pm25", "pm10", "no2", "so2", "o3")
+
+
+def _personalise_leg(leg: Dict, speed_kmh: Optional[float], activity: str, mask: str) -> Dict:
+    """
+    Re-time a route leg at the traveller's own speed and compute the dose they
+    would actually inhale along it:
+
+        dose (ug) = concentration (ug/m3) x ventilation (m3/min) x minutes x mask penetration
+    """
+    if speed_kmh and speed_kmh > 0 and leg.get("distance_km"):
+        leg["duration_min"] = max(1, round(leg["distance_km"] / speed_kmh * 60))
+        leg["speed_kmh"] = speed_kmh
+
+    vent_m3_per_min = prof.ventilation_lpm(activity) / 1000.0
+    pollutants = leg.get("pollutants") or {}
+    inhaled = {}
+    for name in _POLLUTANTS:
+        penetration = prof.mask_pm(mask) if name in ("pm25", "pm10") else prof.mask_gas(mask)
+        inhaled[name] = round(
+            float(pollutants.get(name, 0.0)) * vent_m3_per_min * leg["duration_min"] * penetration, 1
+        )
+    leg["inhaled_ug"] = inhaled
+    leg["inhaled_total_ug"] = round(sum(inhaled.values()), 1)
+    return leg
+
+
+def _dose(leg: Dict) -> float:
+    return float(leg.get("inhaled_total_ug", 0.0))
+
+
+def _dose_reduction_pct(direct_leg: Dict, safe_leg: Dict) -> int:
+    direct = _dose(direct_leg)
+    if direct <= 0:
+        return 0
+    return max(0, round((1 - _dose(safe_leg) / direct) * 100))
+
+
+def _legs_overlap(a: Dict, b: Dict, tolerance_m: float = 100.0) -> bool:
+    """True when two legs follow (almost) the same road, so it is never listed twice."""
+    pa = (a.get("geojson") or {}).get("coordinates") or []
+    pb = (b.get("geojson") or {}).get("coordinates") or []
+    if len(pa) < 2 or len(pb) < 2:
+        return False
+    step = max(1, len(pa) // 24)
+    close = total = 0
+    for i in range(0, len(pa), step):
+        lon, lat = pa[i][0], pa[i][1]
+        km_per_lon = 111.2 * math.cos(math.radians(lat))
+        best = min(((lon - q[0]) * km_per_lon) ** 2 + ((lat - q[1]) * 111.2) ** 2 for q in pb)
+        total += 1
+        if math.sqrt(best) * 1000 <= tolerance_m:
+            close += 1
+    return total > 0 and close / total >= 0.85
+
+
+def _pick_alternatives(legs: list, shown: list, limit: int = 2) -> list:
+    """Up to `limit` genuinely different roads, lowest inhaled dose first."""
+    picked: list = []
+    for leg in sorted(legs, key=_dose):
+        if len(picked) >= limit:
+            break
+        if any(leg is other or _legs_overlap(leg, other) for other in [*shown, *picked]):
+            continue
+        picked.append(leg)
+    return picked
+
+
+def _personalise_result(result: Dict, speed_kmh: Optional[float], activity: str, mask: str) -> Dict:
+    """Apply personalisation to a finished {safe_route, direct_route} result."""
+    _personalise_leg(result["direct_route"], speed_kmh, activity, mask)
+    _personalise_leg(result["safe_route"], speed_kmh, activity, mask)
+    result["exposure_reduction_pct"] = _dose_reduction_pct(result["direct_route"], result["safe_route"])
+    result["personalised"] = {"speed_kmh": speed_kmh, "activity": activity, "mask": mask}
+    return result
+
+
+def _osrm_route(
+    origin: Tuple[float, float],
+    dest: Tuple[float, float],
+    speed_kmh: Optional[float] = None,
+    activity: str = "resting",
+    mask: str = "none",
+) -> Optional[Dict]:
     """Fetch fast global driving routes from the public OSRM service."""
+    global _osrm_down_until
+    if time.time() < _osrm_down_until:
+        return None  # it just failed (blocked or down): go straight to the local fallbacks
     url = (
         "https://router.project-osrm.org/route/v1/driving/"
         f"{origin[1]},{origin[0]};{dest[1]},{dest[0]}"
@@ -407,7 +502,7 @@ def _osrm_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Optio
             url,
             params={"overview": "full", "geometries": "geojson", "alternatives": "true"},
             headers={"User-Agent": "AeroHealth/1.0"},
-            timeout=15.0,
+            timeout=httpx.Timeout(7.0, connect=4.0),
         )
         response.raise_for_status()
         payload = response.json()
@@ -415,35 +510,70 @@ def _osrm_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Optio
         if not osrm_routes:
             return None
 
-        direct = osrm_routes[0]
-        safe = osrm_routes[1] if len(osrm_routes) > 1 else direct
-
         def leg(route: dict) -> Dict:
             coordinates = route.get("geometry", {}).get("coordinates", [])
             avg_aqi = round(sum(get_edge_aqi(lat, lon) for lon, lat in coordinates) / len(coordinates)) if coordinates else 75
-            return {
+            built = {
                 "geojson": {"type": "LineString", "coordinates": coordinates},
                 "distance_km": round(float(route.get("distance", 0)) / 1000, 1),
                 "duration_min": round(float(route.get("duration", 0)) / 60),
                 "avg_aqi_exposure": avg_aqi,
                 "pollutants": _pollutants_for_coordinates(coordinates),
             }
+            return _personalise_leg(built, speed_kmh, activity, mask)
 
-        direct_leg = leg(direct)
-        safe_leg = leg(safe)
-        reduction = round((1 - safe_leg["avg_aqi_exposure"] / direct_leg["avg_aqi_exposure"]) * 100) if direct_leg["avg_aqi_exposure"] else 0
+        legs = [leg(route) for route in osrm_routes]
+        direct_leg = legs[0]  # OSRM's first route is the fastest
+        # Safe route = the candidate that minimises what this person inhales
+        # at their speed, breathing rate and mask - not just average AQI.
+        safe_leg = min(legs, key=_dose)
+        # The router's other roads are kept (not discarded) so the person can compare them.
+        alternatives = _pick_alternatives(
+            [leg_ for leg_ in legs if leg_ is not direct_leg and leg_ is not safe_leg],
+            [direct_leg, safe_leg],
+        )
         return {
             "safe_route": safe_leg,
             "direct_route": direct_leg,
-            "exposure_reduction_pct": reduction,
+            "exposure_reduction_pct": _dose_reduction_pct(direct_leg, safe_leg),
+            **({"alternatives": alternatives} if alternatives else {}),
             "route_source": "OSRM / OpenStreetMap",
+            "personalised": {"speed_kmh": speed_kmh, "activity": activity, "mask": mask},
         }
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as error:
         print(f"OSRM route unavailable for {origin} -> {dest}: {error}")
+        if isinstance(error, httpx.HTTPError):
+            _osrm_down_until = time.time() + 60.0  # skip it for a minute instead of waiting for every request
         return None
 
 
-def compute_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Dict:
+def compute_route(
+    origin: Tuple[float, float],
+    dest: Tuple[float, float],
+    speed_kmh: Optional[float] = None,
+    activity: str = "resting",
+    mask: str = "none",
+) -> Dict:
+    """
+    Personalised entry point: runs the router, then re-times legs at the
+    traveller's speed and attaches inhaled-dose figures.
+    """
+    activity = prof.normalise_activity(activity)
+    mask = prof.normalise_mask(mask)
+    result = _compute_route_base(origin, dest, speed_kmh, activity, mask)
+    if "personalised" not in result:
+        # Graph / fallback paths: personalise after the fact.
+        _personalise_result(result, speed_kmh, activity, mask)
+    return result
+
+
+def _compute_route_base(
+    origin: Tuple[float, float],
+    dest: Tuple[float, float],
+    speed_kmh: Optional[float],
+    activity: str,
+    mask: str,
+) -> Dict:
     """
     Compute both direct (shortest distance) and safe (AQI-weighted) routes.
     Returns GeoJSON LineStrings with coordinates in [lon, lat] order.
@@ -451,7 +581,7 @@ def compute_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Dic
     """
     # Use a fast global road router first. The local graph path below remains
     # available when the public router is unavailable or rate-limited.
-    global_route = _osrm_route(origin, dest)
+    global_route = _osrm_route(origin, dest, speed_kmh, activity, mask)
     if global_route:
         return global_route
 
@@ -564,8 +694,9 @@ def compute_route(origin: Tuple[float, float], dest: Tuple[float, float]) -> Dic
             "safe_route": safe_route,
             "direct_route": direct_route,
             "exposure_reduction_pct": reduction,
+            "route_source": "Offline road graph (campus area only)",
         }
-    
+
     except (nx.NetworkXNoPath, nx.NodeNotFound) as e:
         print(f"No path found between {origin_node} and {dest_node}: {e}")
         return _hardcoded_fallback(origin, dest)
@@ -679,4 +810,6 @@ def _hardcoded_fallback(
             "pollutants": {"pm25": 58.2, "pm10": 92.9, "no2": 38.9, "so2": 10.8, "o3": 49.4},
         },
         "exposure_reduction_pct": 39,
+        "route_source": "Simulated route (not real roads)",
+        "simulated": True,
     }

@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BootSequence } from "@/components/aero/BootSequence";
+import { ForecastPanel } from "@/components/aero/ForecastPanel";
 import { ImpactPanel } from "@/components/aero/ImpactPanel";
 import { LiveBackground } from "@/components/aero/LiveBackground";
 import { MapPanel } from "@/components/aero/MapPanel";
@@ -12,8 +13,9 @@ import { ShapPanel } from "@/components/aero/ShapPanel";
 import { TelemetryStrip } from "@/components/aero/TelemetryStrip";
 import { TopNav } from "@/components/aero/TopNav";
 import { getAqi, getHistory, postExplain, postPredict } from "@/lib/aero/api";
-import { deriveRouteInsight, deriveRouteReading } from "@/lib/aero/route-metrics";
-import type { LatLon, PredictBody, RouteInsight, Vitals } from "@/lib/aero/types";
+import { deriveRouteInsight, deriveRouteReading, legPredictBody, withModelScores } from "@/lib/aero/route-metrics";
+import { DEFAULT_SPEED_KMH } from "@/lib/aero/exposure-profile";
+import type { LatLon, PredictBody, RouteComparison, Vitals } from "@/lib/aero/types";
 import { writeLiveContext } from "@/lib/aero/live-context";
 
 export const Route = createFileRoute("/")({
@@ -53,12 +55,18 @@ function Index() {
   const [place, setPlace] = useState("Mangaluru · IN");
   const [loc, setLoc] = useState<LatLon>({ lat: 12.841690, lon: 74.922980 });
   const [range, setRange] = useState<24 | 168>(24);
-  const [routeInsight, setRouteInsight] = useState<RouteInsight | undefined>();
+  const [routes, setRoutes] = useState<RouteComparison | undefined>();
+  const [speedKmh, setSpeedKmh] = useState(DEFAULT_SPEED_KMH);
   const [vitals, setVitals] = useState<Vitals>({
     heart_rate: 72,
     age: 34,
     weight: 74,
     asthma: false,
+    hypertension: false,
+    spo2: 97,
+    height: 170,
+    activity: "resting",
+    mask: "none",
   });
   const debouncedVitals = useDebounced(vitals);
 
@@ -105,9 +113,38 @@ function Index() {
   });
 
   const prediction = predictQ.data?.data;
+  // Route risk is scored by the same model as the dashboard, using each route's
+  // own pollutants plus the full personal profile (SpO2, hypertension, mask, ...).
+  const baseRouteInsight = useMemo(
+    () => (routes ? deriveRouteInsight(routes, debouncedVitals, reading) : undefined),
+    [routes, debouncedVitals, reading],
+  );
+  const safeBody = useMemo(
+    () => (routes ? legPredictBody(routes.safe_route, debouncedVitals, reading) : undefined),
+    [routes, debouncedVitals, reading],
+  );
+  const directBody = useMemo(
+    () => (routes ? legPredictBody(routes.direct_route, debouncedVitals, reading) : undefined),
+    [routes, debouncedVitals, reading],
+  );
+  const safeRouteQ = useQuery({
+    queryKey: ["route-predict", "safe", safeBody],
+    queryFn: () => postPredict(safeBody!),
+    enabled: !!safeBody,
+    placeholderData: keepPreviousData,
+  });
+  const directRouteQ = useQuery({
+    queryKey: ["route-predict", "direct", directBody],
+    queryFn: () => postPredict(directBody!),
+    enabled: !!directBody,
+    placeholderData: keepPreviousData,
+  });
   const activeRouteInsight = useMemo(
-    () => (routeInsight ? deriveRouteInsight(routeInsight, vitals) : undefined),
-    [routeInsight, vitals],
+    () =>
+      baseRouteInsight
+        ? withModelScores(baseRouteInsight, safeRouteQ.data?.data, directRouteQ.data?.data)
+        : undefined,
+    [baseRouteInsight, safeRouteQ.data, directRouteQ.data],
   );
   const activeTelemetryReading = useMemo(
     () => (reading ? deriveRouteReading(reading, activeRouteInsight) : undefined),
@@ -123,13 +160,14 @@ function Index() {
       location: place,
       location_coords: loc,
       vitals,
+      speed_kmh: speedKmh,
     };
     if (reading) liveUpdate.aqi_data = reading;
     if (prediction) liveUpdate.risk_data = prediction;
     if (explainQ.data?.data) liveUpdate.shap_data = explainQ.data.data;
-    if (routeInsight) liveUpdate.route_data = routeInsight;
+    if (activeRouteInsight) liveUpdate.route_data = activeRouteInsight;
     writeLiveContext(liveUpdate);
-  }, [place, vitals, reading, prediction, explainQ.data, routeInsight]);
+  }, [place, loc, vitals, speedKmh, reading, prediction, explainQ.data, activeRouteInsight]);
 
   const onPlace = useCallback((name: string, next: LatLon) => {
     setPlace(name);
@@ -190,6 +228,8 @@ function Index() {
           </div>
         </div>
 
+        <ForecastPanel loc={loc} />
+
         <div className="grid gap-3 lg:grid-cols-[3fr_2fr]">
           <MapPanel
             loc={loc}
@@ -197,7 +237,11 @@ function Index() {
             place={place}
             loading={aqiQ.isPending}
             vitals={vitals}
-            onRouteInsightChange={setRouteInsight}
+            speedKmh={speedKmh}
+            onSpeedChange={setSpeedKmh}
+            insight={activeRouteInsight}
+            weather={reading ? { temperature: reading.temperature, humidity: reading.humidity } : undefined}
+            onRoutesChange={setRoutes}
           />
           <ImpactPanel
             prediction={prediction}

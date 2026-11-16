@@ -89,7 +89,7 @@ def build_context_message(context: Dict) -> str:
     
     if "vitals" in context:
         vitals = context["vitals"]
-        parts.append(f"User vitals: Age {vitals.get('age')}, HR {vitals.get('heart_rate')} bpm, Asthma: {vitals.get('asthma')}")
+        parts.append(f"User vitals: Age {vitals.get('age')}, HR {vitals.get('heart_rate')} bpm, Asthma: {vitals.get('asthma')}, Hypertension: {vitals.get('hypertension')}, SpO2: {vitals.get('spo2')}%, Activity: {vitals.get('activity')}, Mask: {vitals.get('mask')}")
     
     if "chart_data" in context:
         chart = context["chart_data"]

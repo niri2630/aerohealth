@@ -1,9 +1,10 @@
-import { Activity, HeartPulse, Wind } from "lucide-react";
+import { Activity, Gauge, HeartPulse, Wind } from "lucide-react";
 import { motion } from "motion/react";
 
 import { CountUp, Panel, PanelHead, Shimmer } from "./primitives";
 import { EASE } from "@/lib/aero/ui";
-import type { Prediction, Vitals } from "@/lib/aero/types";
+import type { Activity as ActivityLevel, MaskType, Prediction, Vitals } from "@/lib/aero/types";
+import { ACTIVITY_LABEL, ACTIVITY_VENTILATION_LPM, MASK_LABEL } from "@/lib/aero/exposure-profile";
 import { AskAIButton } from "./AskAIButton";
 import { Tooltip, TooltipContent } from "./Tooltip";
 
@@ -120,6 +121,93 @@ function Control({
   );
 }
 
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="press flex w-full items-center justify-between rounded-xl border border-hairline bg-surface-2 px-4 py-3 transition-colors hover:border-primary/35"
+    >
+      <span className="label-glyph">{label}</span>
+      <span
+        className="relative h-5 w-9 rounded-full border border-hairline transition-colors"
+        style={{
+          background: checked ? "color-mix(in oklab, var(--primary) 30%, transparent)" : "var(--surface-3)",
+        }}
+      >
+        <motion.span
+          className="absolute top-[2px] size-3.5 rounded-full bg-foreground/85"
+          animate={{ left: checked ? 18 : 3 }}
+          transition={{ type: "spring", stiffness: 520, damping: 34 }}
+        />
+      </span>
+    </button>
+  );
+}
+
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (next: T) => void;
+  hint?: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="label-glyph">{label}</span>
+        {hint ? <span className="num text-[10px] text-muted-foreground">{hint}</span> : null}
+      </div>
+      <div role="radiogroup" aria-label={label} className="mt-2 grid auto-cols-fr grid-flow-col gap-1 rounded-xl border border-hairline bg-surface-2 p-1">
+        {options.map((option) => {
+          const active = option.value === value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(option.value)}
+              className={`press rounded-lg px-2 py-1.5 text-[11px] transition-colors ${
+                active
+                  ? "border border-primary/40 bg-primary/15 text-primary"
+                  : "border border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const ACTIVITY_OPTIONS = (Object.keys(ACTIVITY_LABEL) as ActivityLevel[]).map((value) => ({
+  value,
+  label: ACTIVITY_LABEL[value],
+}));
+const MASK_OPTIONS = (Object.keys(MASK_LABEL) as MaskType[]).map((value) => ({
+  value,
+  label: MASK_LABEL[value],
+}));
+
 export function ImpactPanel({
   prediction,
   loading,
@@ -150,7 +238,7 @@ export function ImpactPanel({
       />
       <div className="space-y-2 px-4">
         {loading || !p ? (
-          Array.from({ length: 3 }).map((_, i) => <Shimmer key={i} className="h-[58px]" />)
+          Array.from({ length: 4 }).map((_, i) => <Shimmer key={i} className="h-[58px]" />)
         ) : (
           <>
             <MetricRow
@@ -183,6 +271,17 @@ export function ImpactPanel({
               aiPrompt={`Respiratory stress index change is ${p.resp_stress_delta > 0 ? '+' : ''}${p.resp_stress_delta.toFixed(1)}. Should I be concerned? What precautions should I take?`}
               aiContext={{ respStressDelta: p.resp_stress_delta, vitals }}
             />
+            {typeof p.systolic_bp_delta === "number" ? (
+              <MetricRow
+                icon={<Gauge size={15} strokeWidth={1.5} />}
+                name="Systolic BP"
+                value={p.systolic_bp_delta}
+                unit="mmHg"
+                index={3}
+                aiPrompt={`My predicted systolic blood pressure rise is +${p.systolic_bp_delta.toFixed(1)} mmHg${vitals.hypertension ? " and I have hypertension" : ""}. How concerned should I be, and what can I do about it?`}
+                aiContext={{ systolicBpDelta: p.systolic_bp_delta, vitals }}
+              />
+            ) : null}
           </>
         )}
       </div>
@@ -213,24 +312,45 @@ export function ImpactPanel({
           unit="kg"
           onChange={(weight) => onVitals({ ...vitals, weight })}
         />
-        <button
-          onClick={() => onVitals({ ...vitals, asthma: !vitals.asthma })}
-          className="press flex w-full items-center justify-between rounded-xl border border-hairline bg-surface-2 px-4 py-3 transition-colors hover:border-primary/35"
-        >
-          <span className="label-glyph">asthma / respiratory condition</span>
-          <span
-            className="relative h-5 w-9 rounded-full border border-hairline transition-colors"
-            style={{
-              background: vitals.asthma ? "color-mix(in oklab, var(--primary) 30%, transparent)" : "var(--surface-3)",
-            }}
-          >
-            <motion.span
-              className="absolute top-[2px] size-3.5 rounded-full bg-foreground/85"
-              animate={{ left: vitals.asthma ? 18 : 3 }}
-              transition={{ type: "spring", stiffness: 520, damping: 34 }}
-            />
-          </span>
-        </button>
+        <Control
+          label="height"
+          value={vitals.height}
+          min={120}
+          max={220}
+          unit="cm"
+          onChange={(height) => onVitals({ ...vitals, height })}
+        />
+        <Control
+          label="blood oxygen (SpO₂)"
+          value={vitals.spo2}
+          min={90}
+          max={100}
+          unit="%"
+          onChange={(spo2) => onVitals({ ...vitals, spo2 })}
+        />
+        <ToggleRow
+          label="asthma / respiratory condition"
+          checked={vitals.asthma}
+          onChange={(asthma) => onVitals({ ...vitals, asthma })}
+        />
+        <ToggleRow
+          label="hypertension / cardiovascular condition"
+          checked={vitals.hypertension}
+          onChange={(hypertension) => onVitals({ ...vitals, hypertension })}
+        />
+        <Segmented
+          label="activity / exertion"
+          value={vitals.activity}
+          options={ACTIVITY_OPTIONS}
+          hint={`${ACTIVITY_VENTILATION_LPM[vitals.activity]} L/min air`}
+          onChange={(activity) => onVitals({ ...vitals, activity })}
+        />
+        <Segmented
+          label="mask protection"
+          value={vitals.mask}
+          options={MASK_OPTIONS}
+          onChange={(mask) => onVitals({ ...vitals, mask })}
+        />
       </div>
     </Panel>
   );

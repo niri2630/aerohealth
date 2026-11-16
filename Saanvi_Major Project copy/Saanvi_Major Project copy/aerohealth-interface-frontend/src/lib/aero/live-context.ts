@@ -29,6 +29,7 @@ export type LiveContext = {
   risk_data?: Record<string, unknown>;
   shap_data?: Explanation;
   vitals?: Vitals;
+  speed_kmh?: number;
   route_data?: RouteComparison;
   updated_at: string;
 };
