@@ -91,6 +91,7 @@ The API provides endpoints for health status, air-quality readings, risk predict
 - Risk estimates use synthetic training data and are for demonstration only.
 - Live readings and external map services may be unavailable, incomplete, or rate-limited.
 - The demo API permits cross-origin requests and does not include authentication. Add appropriate access controls and review CORS settings before exposing it publicly.
+- `/api/forecast` is the expensive endpoint (a cold call makes dozens of OpenAQ requests with your key and trains about 50 models). It has basic protections: each client gets 20 requests per minute, repeat requests for the same area are answered from memory with no outside calls, simultaneous requests for one station share a single build, at most two builds run at once, and results are cached for an hour. These limit accidents and casual abuse, not a determined attacker: the client address comes from a header that can be spoofed, so put real authentication or a gateway in front before making the API public.
 
 ## Push changes to GitHub
 

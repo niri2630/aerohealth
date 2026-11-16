@@ -59,8 +59,31 @@ INNER_VALID_FRACTION = 0.2    # last part of each training window, used only to 
 MIN_INNER_VALID = 60
 CACHE_TTL_S = 3600
 
-_cache: Dict[int, Tuple[float, dict]] = {}
+_cache: Dict[int, Tuple[float, dict]] = {}                       # station -> (when, finished forecast)
+_area_cache: Dict[Tuple[float, float], Tuple[float, int]] = {}   # ~1 km area -> (when, station)
+_station_locks: Dict[int, threading.Lock] = {}
 _lock = threading.Lock()
+
+# Protection for the shared OpenAQ key and the CPU: a cold build downloads a lot and trains ~50 models.
+AREA_PRECISION = 2            # decimal places of lat/lon used to recognise "the same place again" (~1 km)
+MAX_CONCURRENT_BUILDS = 2     # heavy builds running at the same time; others wait their turn
+MAX_CACHED = 200              # entries kept in each cache
+_build_slots = threading.BoundedSemaphore(MAX_CONCURRENT_BUILDS)
+
+
+def _station_lock(sensor_id: int) -> threading.Lock:
+    """One lock per station: concurrent requests for the same station share a single build."""
+    with _lock:
+        return _station_locks.setdefault(sensor_id, threading.Lock())
+
+
+def _remember(store: dict, key, value) -> None:
+    """Insert and keep the cache bounded (oldest entries go first)."""
+    with _lock:
+        store[key] = value
+        if len(store) > MAX_CACHED:
+            for old in sorted(store, key=lambda k: store[k][0])[: len(store) - MAX_CACHED]:
+                store.pop(old, None)
 
 
 class ForecastUnavailable(Exception):
@@ -83,8 +106,8 @@ def _parse_utc(text: str) -> pd.Timestamp:
     return pd.Timestamp(text).tz_convert("UTC").tz_localize(None)
 
 
-def _get(client: httpx.Client, url: str, params: Optional[dict] = None, tries: int = 4) -> httpx.Response:
-    """GET with polite retry on OpenAQ's rate limit (429)."""
+def _get(client: httpx.Client, url: str, params: Optional[dict] = None, tries: int = 3) -> httpx.Response:
+    """GET with polite retry on OpenAQ's rate limit (429). Waits at most ~30 s in total, then gives up."""
     for attempt in range(tries):
         resp = client.get(url, params=params)
         if resp.status_code == 429:
@@ -92,7 +115,7 @@ def _get(client: httpx.Client, url: str, params: Optional[dict] = None, tries: i
                 wait = float(resp.headers.get("retry-after", ""))
             except ValueError:
                 wait = 5.0 * (attempt + 1)
-            time.sleep(min(wait, 30.0))
+            time.sleep(min(wait, 10.0))
             continue
         resp.raise_for_status()
         return resp
@@ -637,14 +660,28 @@ def build_forecast(lat: float, lon: float, history_days: int = HISTORY_DAYS) -> 
     if headers is None:
         raise ForecastUnavailable("OPENAQ_API_KEY is not configured on the server.")
 
+    # 1) Fast path: this area was forecast recently, so answer from memory with no outside request.
+    area = (round(lat, AREA_PRECISION), round(lon, AREA_PRECISION))
+    seen = _area_cache.get(area)
+    if seen and time.time() - seen[0] < CACHE_TTL_S:
+        done = _cache.get(seen[1])
+        if done and time.time() - done[0] < CACHE_TTL_S:
+            return done[1]
+
     with httpx.Client(timeout=httpx.Timeout(30.0, connect=6.0), headers=headers) as client:
         target, neighbours = _discover(client, lat, lon)
-        cached = _cache.get(target["sensor_id"])
-        if cached and time.time() - cached[0] < CACHE_TTL_S:
-            return cached[1]
-        inp = fetch_inputs(client, target, neighbours, history_days)
+        sensor_id = target["sensor_id"]
+        _remember(_area_cache, area, (time.time(), sensor_id))
 
-    result = forecast_from_inputs(inp, history_days)
-    with _lock:
-        _cache[target["sensor_id"]] = (time.time(), result)
-    return result
+        # 2) One build per station: requests that arrive meanwhile wait for it and reuse the result.
+        with _station_lock(sensor_id):
+            done = _cache.get(sensor_id)
+            if done and time.time() - done[0] < CACHE_TTL_S:
+                return done[1]
+            # 3) At most MAX_CONCURRENT_BUILDS heavy builds at once, so many different places cannot
+            #    exhaust the CPU or the OpenAQ key's request quota.
+            with _build_slots:
+                inp = fetch_inputs(client, target, neighbours, history_days)
+                result = forecast_from_inputs(inp, history_days)
+            _remember(_cache, sensor_id, (time.time(), result))
+            return result

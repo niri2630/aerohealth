@@ -2,7 +2,7 @@
 AeroHealth API - FastAPI backend for air quality health risk prediction.
 All endpoints match the reconciled frontend contract (see STEP0_RECONCILIATION.md).
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 import math
 
 import asyncio
+import threading
 
 import aqi
 import forecast
@@ -344,14 +345,49 @@ async def get_aqi(lat: float, lon: float):
         raise HTTPException(status_code=500, detail=f"AQI fetch failed: {str(e)}")
 
 
+# The forecast is the expensive endpoint: a cold call makes dozens of requests with the shared OpenAQ key
+# and trains ~50 models. Each client gets a small allowance per minute; results are cached for an hour,
+# so normal use (one request per place) never comes near it.
+FORECAST_REQUESTS_PER_MINUTE = 20
+_forecast_hits: dict = {}
+_forecast_hits_lock = threading.Lock()
+
+
+def _check_forecast_rate_limit(request: Request) -> None:
+    # Behind a proxy (Render, Vercel) every visitor shares the proxy's address, so prefer the forwarded
+    # one. That header can be spoofed, which is acceptable for a demo; use real auth before going public.
+    forwarded = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    client = forwarded or (request.client.host if request.client else "unknown")
+    now = time.time()
+    with _forecast_hits_lock:
+        recent = [t for t in _forecast_hits.get(client, []) if now - t < 60.0]
+        if len(recent) >= FORECAST_REQUESTS_PER_MINUTE:
+            _forecast_hits[client] = recent
+            raise HTTPException(
+                status_code=429,
+                detail="Too many forecast requests. Please wait a minute and try again.",
+                headers={"Retry-After": "60"},
+            )
+        recent.append(now)
+        _forecast_hits[client] = recent
+        if len(_forecast_hits) > 2000:  # keep the table bounded
+            for key in [k for k, v in _forecast_hits.items() if not v or now - v[-1] > 60.0]:
+                _forecast_hits.pop(key, None)
+
+
 @app.get("/api/forecast")
-def get_forecast(lat: float, lon: float):
+def get_forecast(
+    request: Request,
+    lat: float = Query(..., ge=-90, le=90),
+    lon: float = Query(..., ge=-180, le=180),
+):
     """
-    24-hour PM2.5 forecast for the nearest monitoring station, with its hold-out
-    evaluation against persistence and seasonal-naive baselines.
+    24-hour PM2.5 forecast for the nearest monitoring station, with its cross-validated
+    evaluation against persistence and same-hour-yesterday baselines.
     Sync endpoint on purpose: a cold call downloads history and trains models,
     so FastAPI runs it in a worker thread (results are cached for an hour).
     """
+    _check_forecast_rate_limit(request)
     try:
         return forecast.build_forecast(lat, lon)
     except forecast.ForecastUnavailable as e:

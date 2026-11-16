@@ -93,6 +93,9 @@ function explainForecastFailure(status: number, detail: string): string {
   if (/401|403|unauthorized|forbidden/i.test(detail)) {
     return "OpenAQ rejected the API key. Check OPENAQ_API_KEY in aerohealth-api/.env, then restart the API.";
   }
+  if (status === 429) {
+    return "Too many forecast requests in a short time. Wait a minute and try again.";
+  }
   if (status === 404) {
     return "This backend is an older version without the forecast feature. Update the backend files and restart it.";
   }
