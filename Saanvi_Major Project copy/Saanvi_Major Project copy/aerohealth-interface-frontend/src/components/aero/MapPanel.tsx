@@ -27,12 +27,6 @@ const API_BASE = (import.meta.env["VITE_API_URL"] ?? "").replace(/\/$/, "");
 /** A problem the person can act on (unknown place, same start and end), shown as a message. */
 class RouteProblem extends Error {}
 
-/** +1.2 / −3.0 / ±0.0, for comparing an option with the safe route. */
-function signed(value: number, digits: number) {
-  const sign = value > 0.0001 ? "+" : value < -0.0001 ? "\u2212" : "\u00b1";
-  return `${sign}${Math.abs(value).toFixed(digits)}`;
-}
-
 export function MapPanel({
   loc,
   aqi,
@@ -538,12 +532,6 @@ export function MapPanel({
             <span className="h-[3px] w-5 rounded bg-red-500" />
             <span className="num text-[9px] tracking-[0.14em] uppercase">direct</span>
           </div>
-          {routes?.alternatives?.length ? (
-            <div className="flex items-center gap-2">
-              <span className="h-[3px] w-5 rounded bg-slate-400" />
-              <span className="num text-[9px] tracking-[0.14em] uppercase">options</span>
-            </div>
-          ) : null}
           {routes && routesCoincide(routes) ? (
             <div className="num max-w-[9rem] text-[9px] leading-snug text-muted-foreground">same road, so the red dashes sit on the teal line</div>
           ) : null}
@@ -661,47 +649,6 @@ export function MapPanel({
                     <div className="num mt-0.5 text-[9px] text-muted-foreground/60 uppercase">{item.s}</div>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-3 rounded-xl border border-hairline bg-background/55 px-3 py-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-3">
-                  <span className="label-glyph text-[9px]">other roads you could take</span>
-                  <span className="num text-[9px] text-muted-foreground">compared with the safe route</span>
-                </div>
-                {routes.alternatives?.length ? (
-                  <ul className="mt-2 space-y-1.5">
-                    {routes.alternatives.map((alt, index) => {
-                      const base = routes.safe_route.inhaled_total_ug ?? 0;
-                      const dose = alt.inhaled_total_ug;
-                      const doseChange =
-                        base > 0 && typeof dose === "number" ? ((dose - base) / base) * 100 : null;
-                      return (
-                        <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                          <span className="inline-block h-[3px] w-5 rounded bg-slate-400" />
-                          <span className="num text-[10px] tracking-[0.12em] uppercase text-muted-foreground">
-                            option {index + 1}
-                          </span>
-                          <span className="num text-[11px]">
-                            {alt.distance_km.toFixed(1)} km · {Math.round(alt.duration_min)} min
-                            {typeof dose === "number" ? ` · ${dose.toFixed(0)} µg inhaled` : ""}
-                          </span>
-                          <span className="num text-[10px] text-muted-foreground">
-                            ({signed(alt.distance_km - routes.safe_route.distance_km, 1)} km,{" "}
-                            {signed(Math.round(alt.duration_min) - Math.round(routes.safe_route.duration_min), 0)} min
-                            {doseChange !== null ? `, ${signed(doseChange, 0)}% dose` : ""})
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <p className="mt-2 text-[10px] text-muted-foreground">
-                    No other genuinely different road was found for this trip.
-                  </p>
-                )}
-                <p className="mt-2 text-[9px] text-muted-foreground">
-                  Pollution along routes is simulated, so these differences are illustrative.
-                </p>
               </div>
 
               <div className="mt-3 grid gap-2 border-t border-hairline pt-3 sm:grid-cols-2">

@@ -53,11 +53,6 @@ export type RouteComparison = {
   safe_route: RouteLeg;
   direct_route: RouteLeg;
   exposure_reduction_pct: number;
-  /**
-   * Up to two other genuinely different roads, best (lowest inhaled dose) first. They are
-   * computed anyway while choosing the safe route; showing them lets the person compare.
-   */
-  alternatives?: RouteLeg[];
 };
 
 export type RouteInsight = RouteComparison & {

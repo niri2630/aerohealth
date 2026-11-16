@@ -4,7 +4,6 @@ import {
   personaliseLeg,
   personaliseRoutes,
   doseReductionPct,
-  pickAlternatives,
 } from "./exposure-profile";
 import type {
   Activity,
@@ -369,18 +368,18 @@ export async function fetchWorldwideRoute(
   };
   let base = routerBaseFor(profile.speedKmh);
   let source = base === OSRM_BASE ? "OpenStreetMap / OSRM (car)" : "OpenStreetMap (foot/bike)";
-  const requestAll = async (points: LatLon[], alternatives = false): Promise<RawRoute[]> => {
+  const request = async (points: LatLon[]): Promise<RawRoute> => {
     const coordinates = points.map((point) => `${point.lon},${point.lat}`).join(";");
     const fetchFrom = async (root: string) => {
       const response = await fetchWithTimeout(
-        `${root}/${coordinates}?overview=full&geometries=geojson${alternatives ? "&alternatives=true" : ""}`,
+        `${root}/${coordinates}?overview=full&geometries=geojson`,
         { headers: { Accept: "application/json" } },
         9000,
       );
       if (!response.ok) throw new Error(`Global route service responded ${response.status}`);
       const payload = (await response.json()) as { routes?: RawRoute[] };
       if (!payload.routes?.[0]) throw new Error("No route found for these locations");
-      return payload.routes;
+      return payload.routes[0];
     };
     try {
       return await fetchFrom(base);
@@ -392,11 +391,7 @@ export async function fetchWorldwideRoute(
       return await fetchFrom(base);
     }
   };
-  const request = async (points: LatLon[]): Promise<RawRoute> => (await requestAll(points))[0]!;
-
-  // The router can also offer its own alternatives for the plain A to B trip, at no extra request.
-  const directAll = await requestAll([origin, destination], true);
-  const directRoute = directAll[0]!;
+  const directRoute = await request([origin, destination]);
   const latitudeDelta = destination.lat - origin.lat;
   const longitudeDelta = destination.lon - origin.lon;
   const length = Math.max(Math.hypot(latitudeDelta, longitudeDelta), 0.01);
@@ -418,12 +413,10 @@ export async function fetchWorldwideRoute(
     request([origin, waypointA, destination]),
     request([origin, waypointB, destination]),
   ]);
-  const candidates = [
-    ...candidateRoutes
-      .filter((result): result is PromiseFulfilledResult<RawRoute> => result.status === "fulfilled")
-      .map((result) => result.value),
-    ...directAll.slice(1),
-  ].filter((route) => route.geometry.coordinates.length > 2);
+  const candidates = candidateRoutes
+    .filter((result): result is PromiseFulfilledResult<RawRoute> => result.status === "fulfilled")
+    .map((result) => result.value)
+    .filter((route) => route.geometry.coordinates.length > 2);
 
   // Every candidate is timed at the traveller's own speed and scored by the dose
   // they would inhale (concentration x breathing rate x time x mask).
@@ -443,18 +436,13 @@ export async function fetchWorldwideRoute(
     );
   };
   const direct = toLeg(directRoute);
-  const candidateLegs = candidates.map(toLeg);
-  const safe = [direct, ...candidateLegs].reduce((best, leg) =>
+  const safe = [direct, ...candidates.map(toLeg)].reduce((best, leg) =>
     (leg.inhaled_total_ug ?? 0) < (best.inhaled_total_ug ?? 0) ? leg : best,
   );
-  // Keep up to two other genuinely different roads so the person can compare, instead of
-  // throwing them away after choosing the safe one.
-  const alternatives = pickAlternatives(candidateLegs, [direct, safe]);
   return {
     direct_route: direct,
     safe_route: safe,
     exposure_reduction_pct: doseReductionPct(direct, safe),
-    ...(alternatives.length ? { alternatives } : {}),
     route_source: source,
   };
 }

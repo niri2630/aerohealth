@@ -100,14 +100,6 @@ export default function MapCanvas({
 
       {routes ? (
         <>
-          {/* Other roads the person could take: thin grey lines under the safe and direct routes. */}
-          {routes.alternatives?.map((alt, index) => (
-            <Polyline
-              key={`alt-${index}`}
-              positions={toLatLngs(alt.geojson)}
-              pathOptions={{ color: "#94a3b8", weight: 4, opacity: 0.85 }}
-            />
-          ))}
           <Polyline
             positions={toLatLngs(routes.direct_route.geojson)}
             pathOptions={{

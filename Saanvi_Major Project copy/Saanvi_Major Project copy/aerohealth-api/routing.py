@@ -443,36 +443,6 @@ def _dose_reduction_pct(direct_leg: Dict, safe_leg: Dict) -> int:
     return max(0, round((1 - _dose(safe_leg) / direct) * 100))
 
 
-def _legs_overlap(a: Dict, b: Dict, tolerance_m: float = 100.0) -> bool:
-    """True when two legs follow (almost) the same road, so it is never listed twice."""
-    pa = (a.get("geojson") or {}).get("coordinates") or []
-    pb = (b.get("geojson") or {}).get("coordinates") or []
-    if len(pa) < 2 or len(pb) < 2:
-        return False
-    step = max(1, len(pa) // 24)
-    close = total = 0
-    for i in range(0, len(pa), step):
-        lon, lat = pa[i][0], pa[i][1]
-        km_per_lon = 111.2 * math.cos(math.radians(lat))
-        best = min(((lon - q[0]) * km_per_lon) ** 2 + ((lat - q[1]) * 111.2) ** 2 for q in pb)
-        total += 1
-        if math.sqrt(best) * 1000 <= tolerance_m:
-            close += 1
-    return total > 0 and close / total >= 0.85
-
-
-def _pick_alternatives(legs: list, shown: list, limit: int = 2) -> list:
-    """Up to `limit` genuinely different roads, lowest inhaled dose first."""
-    picked: list = []
-    for leg in sorted(legs, key=_dose):
-        if len(picked) >= limit:
-            break
-        if any(leg is other or _legs_overlap(leg, other) for other in [*shown, *picked]):
-            continue
-        picked.append(leg)
-    return picked
-
-
 def _personalise_result(result: Dict, speed_kmh: Optional[float], activity: str, mask: str) -> Dict:
     """Apply personalisation to a finished {safe_route, direct_route} result."""
     _personalise_leg(result["direct_route"], speed_kmh, activity, mask)
@@ -527,16 +497,10 @@ def _osrm_route(
         # Safe route = the candidate that minimises what this person inhales
         # at their speed, breathing rate and mask - not just average AQI.
         safe_leg = min(legs, key=_dose)
-        # The router's other roads are kept (not discarded) so the person can compare them.
-        alternatives = _pick_alternatives(
-            [leg_ for leg_ in legs if leg_ is not direct_leg and leg_ is not safe_leg],
-            [direct_leg, safe_leg],
-        )
         return {
             "safe_route": safe_leg,
             "direct_route": direct_leg,
             "exposure_reduction_pct": _dose_reduction_pct(direct_leg, safe_leg),
-            **({"alternatives": alternatives} if alternatives else {}),
             "route_source": "OSRM / OpenStreetMap",
             "personalised": {"speed_kmh": speed_kmh, "activity": activity, "mask": mask},
         }
